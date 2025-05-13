@@ -23,6 +23,7 @@ dependencies:
 - base >= 4.7 && < 5
 - hspec >= 2.11
 - megaparsec >= 9.6
+- text >= 2.1
 
 ghc-options:
 - -Wall
