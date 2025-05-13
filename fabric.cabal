@@ -26,6 +26,8 @@ source-repository head
 library
   exposed-modules:
       Compiler.Database.Relational.Column
+      Compiler.Parser
+      Compiler.SQL.Parser
       Lib
   other-modules:
       Paths_fabric
@@ -62,6 +64,7 @@ test-suite fabric-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      Compiler.SQL.ParserSpec
       Paths_fabric
   autogen-modules:
       Paths_fabric

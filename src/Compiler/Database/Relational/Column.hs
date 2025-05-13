@@ -1,9 +1,9 @@
 module Compiler.Database.Relational.Column where
 
 data Column = Column
-  { _name :: String,
-    _type :: ColumnType,
-    _constraints :: [ColumnConstraint]
+  { _name :: String
+  , _type :: ColumnType
+  , _constraints :: [ColumnConstraint]
   }
 
 data ColumnType
