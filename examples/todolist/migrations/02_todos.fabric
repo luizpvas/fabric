@@ -1,0 +1,12 @@
+import Database exposing (..)
+
+change = do
+  create_table "todos"
+    [ column "id" bigint [ primary_key ]
+    , column "user_id" bigint [ index, foreign_key "users" "id" ]
+    , column "description" varchar(120)
+    , column "completed" timestamp [ null ]
+    , column "created_at" timestamp []
+    , column "updated_at" timestamp []
+    ]
+end

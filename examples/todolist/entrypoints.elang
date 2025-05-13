@@ -1,0 +1,9 @@
+RegistrationPayload =
+  { name : String{filled}
+  , email_address : String{formatted Email.regexp, trimmed, downcased}
+  , password : String{lengthed >= 8}
+  }
+
+register = do
+  todo
+end
