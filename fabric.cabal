@@ -27,6 +27,7 @@ library
   exposed-modules:
       Compiler.Database.Relational.Column
       Compiler.Parser
+      Compiler.Parser.Number
       Compiler.SQL.Parser
       Lib
   other-modules:
@@ -64,6 +65,8 @@ test-suite fabric-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      Compiler.Parser.Assertion
+      Compiler.Parser.NumberSpec
       Compiler.SQL.ParserSpec
       Paths_fabric
   autogen-modules:
