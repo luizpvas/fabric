@@ -97,7 +97,7 @@ parser =
 
 literalNumber :: Parser Expression
 literalNumber =
-  toExpressionNumber <$> Number.parser
+  fmap toExpressionNumber Number.parser
   where
     toExpressionNumber (Number.Int i)   = LiteralInt i
     toExpressionNumber (Number.Hex h)   = LiteralHex h
