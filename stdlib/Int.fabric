@@ -1,0 +1,19 @@
+module Int exposing (...)
+
+
+type Int = Platform.Int
+
+
+-- `Int.Positive` is a convenient alias for integers greater than zero. Useful
+-- for size or length or count values.
+type Int.Positive = Int<greaterThan? 0>
+
+
+-- Checks if the given `num` is greater than `other`. This is the exact same
+-- behaviour as the `>` operator, but useful in type constraints.
+--
+-- Notice that `other` is the first argument.
+greaterThan? : Int -> Int -> Bool
+greaterThan? = other num do
+  num > other
+end

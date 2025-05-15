@@ -26,7 +26,6 @@ source-repository head
 library
   exposed-modules:
       Compiler.Database.Relational.Column
-      Compiler.Parser
       Compiler.Parser.Number
       Compiler.SQL.Parser
       Lib
@@ -41,7 +40,6 @@ library
       base >=4.7 && <5
     , hspec >=2.11
     , megaparsec >=9.6
-    , text >=2.1
   default-language: Haskell2010
 
 executable fabric-exe
@@ -58,7 +56,6 @@ executable fabric-exe
     , fabric
     , hspec >=2.11
     , megaparsec >=9.6
-    , text >=2.1
   default-language: Haskell2010
 
 test-suite fabric-test
@@ -79,5 +76,4 @@ test-suite fabric-test
     , fabric
     , hspec >=2.11
     , megaparsec >=9.6
-    , text >=2.1
   default-language: Haskell2010

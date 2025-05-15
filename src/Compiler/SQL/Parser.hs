@@ -1,6 +1,5 @@
 module Compiler.SQL.Parser where
 
-import Data.Text (Text)
 import Data.Void
 import Text.Megaparsec
 import Text.Megaparsec.Char
@@ -9,7 +8,7 @@ import Text.Megaparsec.Char
 -- PARSER
 
 
-type Parser = Parsec Void Text
+type Parser = Parsec Void String
 
 
 -- EXPR
@@ -18,7 +17,7 @@ type Parser = Parsec Void Text
 data Expr
   = LiteralInt Int
   | LiteralFloat Float
-  | LiteralString Text
+  | LiteralString String
   | LiteralNull
   | LiteralTrue
   | LiteralFalse
@@ -38,7 +37,7 @@ data UnaryOperator
   = PrefixBitwiseNot Expr
   | PrefixPositive Expr
   | PrefixNegative Expr
-  | Collate Expr Text
+  | Collate Expr String
   | Escape Expr 
   | IsNull Expr
   | NotNull Expr
@@ -63,7 +62,7 @@ data BinaryOperator
   | GreaterThanOrEqual Expr Expr
   | Equals Expr Expr
   | DoubleEquals Expr Expr
-  | NotEquals Text Expr Expr
+  | NotEquals String Expr Expr
   | Is Expr Expr
   | IsNot Expr Expr
   | IsDistinctFrom Expr Expr

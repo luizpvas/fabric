@@ -1,20 +1,16 @@
-list_user_todos :: Todolist.User.Id -> List Todo <Database.Select>
-list_user_todos user_id =
-  SELECT * FROM todos WHERE user_id = :user_id
+create_user
+  :: { name          : String<filled>
+     , email_address : String<formatted Email.Address.format, downcased, trimmed>
+     , password      : String<lengthed >= 8>
+     }
+  -> Todolist.User.Id <Database.Insert<Todolist.User>, Time.Now>
 
-create_user :
-  { name : String
-  , email_address : String
-  , password : String
-  } -> Todolist.User.Id <Database.Insert<Todolist.User>, Time.Clock>
-create_user = attrs do
-  Database.insert Todolist.User
-    { name = attrs.name
-    , email_address = attrs.email_address
-    , password = Hash.digest attrs.password
-    , created_at = Time.now
-    }
-end
+
+create_long_lived_auth_token
+  :: Todolist.User.Id
+  -> Http.IpAddress 
+  -> Todolist.Token.Value<Database.Insert<TodoList.Token>, Time.Now>
+
 
 register : Http.IpAddress -> Http.Params -> Http.Response <Database.Insert>
 register = ip_address params do
