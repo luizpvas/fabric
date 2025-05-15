@@ -20,6 +20,7 @@ data Expression
   | LiteralHex Int
   | LiteralFloat Float
   | LiteralString String
+  | LiteralBlob String
   | LiteralNull
   | LiteralTrue
   | LiteralFalse
