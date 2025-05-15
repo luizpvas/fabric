@@ -1,4 +1,4 @@
-module Int exposing (...)
+module Int exposing (..)
 
 
 type Int = Platform.Int

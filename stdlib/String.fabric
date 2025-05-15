@@ -1,4 +1,4 @@
-module String exposing (...)
+module String exposing (..)
 
 
 type String = Platform.String

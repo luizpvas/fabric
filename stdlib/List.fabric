@@ -1,0 +1,13 @@
+module List exposing (..)
+
+
+type List a = Platform.List a
+
+
+map : (a -> b) -> List a -> List b
+map = f list do
+  case list
+  []      -> []
+  x :: xs -> f x : map f xs
+  end
+end
