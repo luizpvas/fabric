@@ -27,7 +27,7 @@ library
   exposed-modules:
       Compiler.Database.Relational.Column
       Compiler.Parser.Number
-      Compiler.SQL.Parser
+      Compiler.SQL.Expression
       Lib
   other-modules:
       Paths_fabric
@@ -64,7 +64,7 @@ test-suite fabric-test
   other-modules:
       Compiler.Parser.Assertion
       Compiler.Parser.NumberSpec
-      Compiler.SQL.ParserSpec
+      Compiler.SQL.ExpressionSpec
       Paths_fabric
   autogen-modules:
       Paths_fabric
