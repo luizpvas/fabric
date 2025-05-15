@@ -28,8 +28,8 @@ parserHelper :: Parsec Void String Number
 parserHelper =
   choice
     [ toHex <$ string' "0x" <*> hexDigits
-    , toFloatDecimalOnly <$> decimalDigits
-    , toIntOrFloat <$> digits <*> (optional decimalDigits)
+    , toFloatDecimalOnly <$> decimalDigits <*> (optional exponentDigits)
+    , toIntOrFloat <$> digits <*> (optional decimalDigits) <*> (optional exponentDigits)
     ]
 
 
@@ -45,11 +45,20 @@ digits =
   (:) <$> digitChar <*> many underscoreSeparatedDigit
   where
     underscoreSeparatedDigit = choice [ id <$ char '_' <*> digitChar, digitChar ]
-      
+
 
 decimalDigits :: Parsec Void String String
 decimalDigits =
   id <$ char '.' <*> digits
+
+
+exponentDigits :: Parsec Void String String
+exponentDigits =
+  id <$ char' 'e' <*> choice
+    [ (:) <$> char '-' <*> digits
+    , id <$ char '+' <*> digits
+    , digits
+    ]
 
 
 toHex :: String -> Number
@@ -57,13 +66,22 @@ toHex hexDigits =
   Hex (read ("0x" ++ hexDigits))
 
 
-toIntOrFloat :: String -> Maybe String -> Number
-toIntOrFloat intDigits Nothing = Int (read intDigits)
-toIntOrFloat intDigits (Just decimalDigits) = Float (read (intDigits ++ "." ++ decimalDigits))
+toIntOrFloat :: String -> Maybe String -> Maybe String -> Number
+toIntOrFloat digits_ Nothing Nothing =
+  Int (read digits_)
+toIntOrFloat digits_ Nothing (Just exponentDigits_) =
+  Float (read (digits_ ++ "e" ++ exponentDigits_))
+toIntOrFloat digits_ (Just decimalDigits_) Nothing = 
+  Float (read (digits_ ++ "." ++ decimalDigits_))
+toIntOrFloat digits_ (Just decimalDigits_) (Just exponentDigits_) = 
+  Float (read (digits_ ++ "." ++ decimalDigits_ ++ "e" ++ exponentDigits_))
 
 
-toFloatDecimalOnly :: String -> Number
-toFloatDecimalOnly decimalDigits = Float (read ("0." ++ decimalDigits))
+toFloatDecimalOnly :: String -> Maybe String -> Number
+toFloatDecimalOnly decimalDigits_ Nothing =
+  Float (read ("0." ++ decimalDigits_))
+toFloatDecimalOnly decimalDigits_ (Just exponentDigits_) =
+  Float (read ("0." ++ decimalDigits_ ++ "e" ++ exponentDigits_))
 
 
 positive :: Number -> Number
