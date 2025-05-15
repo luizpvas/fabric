@@ -10,7 +10,7 @@ import Text.Megaparsec.Char
 data Number
   = Int Int
   | Hex Int
-  | Float Int
+  | Float Float
   deriving (Show, Eq)
 
 
@@ -28,7 +28,8 @@ parserHelper :: Parsec Void String Number
 parserHelper =
   choice
     [ toHex <$ string' "0x" <*> hexDigits
-    , toIntOrFloat <$> digits <*> maybeDecimalDigits
+    , toFloatDecimalOnly <$> decimalDigits
+    , toIntOrFloat <$> digits <*> (optional decimalDigits)
     ]
 
 
@@ -46,9 +47,9 @@ digits =
     underscoreSeparatedDigit = choice [ id <$ char '_' <*> digitChar, digitChar ]
       
 
-maybeDecimalDigits :: Parsec Void String (Maybe String)
-maybeDecimalDigits =
-  choice [ Just <$ char '.' <*> digits, pure Nothing ]
+decimalDigits :: Parsec Void String String
+decimalDigits =
+  id <$ char '.' <*> digits
 
 
 toHex :: String -> Number
@@ -59,6 +60,10 @@ toHex hexDigits =
 toIntOrFloat :: String -> Maybe String -> Number
 toIntOrFloat intDigits Nothing = Int (read intDigits)
 toIntOrFloat intDigits (Just decimalDigits) = Float (read (intDigits ++ "." ++ decimalDigits))
+
+
+toFloatDecimalOnly :: String -> Number
+toFloatDecimalOnly decimalDigits = Float (read ("0." ++ decimalDigits))
 
 
 positive :: Number -> Number

@@ -40,10 +40,10 @@ spec = do
 
   describe "hex" $ do
     it "parses literal positive hex numbers prefixed with 0x (lowercase x)" $ do
-      assertParseSuccess Number.parser "0xA"(Number.Hex 10)
+      assertParseSuccess Number.parser "0xA" (Number.Hex 10)
 
     it "parses literal positive hex numbers prefixed with 0X (uppercase X)" $ do
-      assertParseSuccess Number.parser "0X10"(Number.Hex 16)
+      assertParseSuccess Number.parser "0X10" (Number.Hex 16)
 
     it "parses literal positive hex numbers prefixed by plus sign" $ do
       assertParseSuccess Number.parser "+0xA" (Number.Hex 10)
@@ -56,3 +56,22 @@ spec = do
 
     it "parses literal negative hex numbers with underscore formatting" $ do
       assertParseSuccess Number.parser "-0x1_0" (Number.Hex (-16))
+
+  describe "float" $ do
+    it "parses positive floats with integer digits" $ do
+      assertParseSuccess Number.parser "0.00001" (Number.Float 0.00001)
+
+    it "parses positive floats with integer digits prefixed by plus sign" $ do
+      assertParseSuccess Number.parser "+1.0" (Number.Float 1.0)
+
+    it "parses positive floats with leading period" $ do
+      assertParseSuccess Number.parser ".3" (Number.Float 0.3)
+
+    it "parses positive floats with leading period and underscore formatting" $ do
+      assertParseSuccess Number.parser ".000_001" (Number.Float 0.000001)
+
+    it "parses negative floats with leading period" $ do
+      assertParseSuccess Number.parser "-.3" (Number.Float (-0.3))
+
+    it "parses negative floats with integer digits and underscore formatting" $ do
+      assertParseSuccess Number.parser "-9_000.000_3" (Number.Float (-9000.0003))
