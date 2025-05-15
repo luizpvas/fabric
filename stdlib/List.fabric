@@ -4,10 +4,29 @@ module List exposing (..)
 type List a = Platform.List a
 
 
+-- Apply a function to every item of a list.
+--
+--   fabric> List.map String.reverse [ "Hello", "world" ]  
+--   [ "olleH", "dlrow" ]
+--
 map : (a -> b) -> List a -> List b
-map = f list do
+map = fn f list do
   case list
   []      -> []
-  x :: xs -> f x : map f xs
+  x :: xs -> f x :: map f xs
+  end
+end
+
+
+-- Keep items of a list that passes the test function.
+--
+--   fabric> List.filter (fn x -> x % 2 == 0) [ 1, 2, 3 ] 
+--   [ 2 ]
+--
+filter : (a -> Bool) -> List a -> List a
+filter = fn test list do
+  case list
+  [] -> []
+  x :: xs -> if test x do x :: filter xs else filter xs end
   end
 end

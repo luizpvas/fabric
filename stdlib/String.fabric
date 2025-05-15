@@ -4,12 +4,10 @@ module String exposing (..)
 type String = Platform.String
 
 
--- Returns the amount of human-readable characters in the given String. For
--- example:
+-- Get the amount of human-readable characters of a string. For example:
 --
 --   fabric> String.length "hi 👍"
 --   4
+--
 length : String -> Int.Positive
-length = str do
-  Platform.String.length str
-end
+length = Platform.String.length
