@@ -47,7 +47,7 @@ data Operator
   | Minus Expression
   -- UNARY SUFFIX
   | Collate String Expression
-  | Escape Expression 
+  | Escape Expression
   | IsNull Expression
   | NotNull Expression
   deriving (Show, Eq)
