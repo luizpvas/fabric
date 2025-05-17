@@ -31,11 +31,13 @@ data Expression
   | Operator Operator
   deriving (Show, Eq)
 
+
 data Operator
   = Unary UnaryOperator
   | Binary BinaryOperator
   | Tertiary TertiaryOperator
   deriving (Show, Eq)
+
 
 data UnaryOperator
   = PrefixBitwiseNot Expression
@@ -46,6 +48,7 @@ data UnaryOperator
   | IsNull Expression
   | NotNull Expression
   deriving (Show, Eq)
+
 
 data BinaryOperator
   = StringConcatenation Expression Expression
@@ -84,6 +87,7 @@ data BinaryOperator
   | And Expression Expression
   | Or Expression Expression
   deriving (Show, Eq)
+
 
 data TertiaryOperator
   = Between Expression Expression Expression
@@ -124,17 +128,18 @@ literalBlob =
 
 literalNull :: Parser Expression
 literalNull =
-  LiteralNull <$ (string' "null")
+  LiteralNull <$ string' "null"
 
 
 literalTrue :: Parser Expression
 literalTrue =
-  LiteralTrue <$ (string' "true")
+  LiteralTrue <$ string' "true"
 
 
 literalFalse :: Parser Expression
 literalFalse =
-  LiteralFalse <$ (string' "false")
+  LiteralFalse <$ string' "false"
+
 
 literalCurrent :: Parser Expression
 literalCurrent =
