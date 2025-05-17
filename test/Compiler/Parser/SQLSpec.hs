@@ -71,7 +71,7 @@ spec = do
       assertParseSuccess parser "-0.1" $
         Operator (Minus (LiteralFloat 0.1))
 
-  describe "unary suffix" $ do
+  describe "unary postfix" $ do
     it "parses COLLATE operator" $ do
       assertParseSuccess parser "'hello' COLLATE NOCASE" $
         Operator (Collate "NOCASE" (LiteralString "hello"))
