@@ -75,18 +75,18 @@ data Operator
   | IsNotDistinctFrom Expression Expression
   | And Expression Expression
   | Or Expression Expression
+  | Match Expression Expression
+  | NotMatch Expression Expression
+  | Regexp Expression Expression
+  | NotRegexp Expression Expression
   deriving (Show, Eq)
 
 
 data BinaryOperator
   = In Expression Expression
   | NotIn Expression Expression
-  | Match Expression Expression
-  | NotMatch Expression Expression
   | Like Expression Expression -- TODO: handle ESCAPE
   | NotLike Expression Expression
-  | Regexp Expression Expression
-  | NotRegexp Expression Expression
   | Glob Expression Expression
   | NotGlob Expression Expression
   deriving (Show, Eq)
@@ -182,32 +182,36 @@ unaryPrefixMinus =
 unaryPostfix :: Parser (Expression -> Expression)
 unaryPostfix =
   choice
-    [ toCollate <$ string' "collate" <* space1 <*> Name.variable
-    , Operator . IsNull <$ string' "isnull"
-    , unaryPostfixNot
+    [ string' "not" *> space *> unaryPostfixNot
+    , toCollate <$ string' "collate" <* space1 <*> Name.variable
+    , toIsNull  <$ string' "isnull"
     ]
   where
-    toCollate collationName expr =
-      Operator (Collate collationName expr)
+    toIsNull expr = Operator (IsNull expr)
+    toCollate collationName expr = Operator (Collate collationName expr)
 
 
 unaryPostfixNot :: Parser (Expression -> Expression)
 unaryPostfixNot =
-  string' "not" *> trailing
+  choice
+    [ toNotNull   <$ string' "null"
+    , toNotMatch  <$ string' "match" <* space <*> parser
+    , toNotRegexp <$ string' "regexp" <* space <*> parser
+    ]
   where
-    trailing :: Parser (Expression -> Expression)
-    trailing =
-      choice
-        [ Operator . NotNull <$ space <* string' "null"
-        ]
+    toNotNull           = Operator . NotNull
+    toNotMatch rhs lhs  = Operator (NotMatch lhs rhs)
+    toNotRegexp rhs lhs = Operator (NotRegexp lhs rhs)
 
 
 binaryRight :: Parser (Expression -> Expression)
 binaryRight =
   choice
-    [ string' "is" *> space *> binaryRightIs
-    , toAnd                    <$ string' "and" <* space <*> parser
-    , toOr                     <$ string' "or"  <* space <*> parser
+    [ string' "is"  *> space *> binaryRightIs
+    , toAnd                    <$ string' "and"    <* space <*> parser
+    , toOr                     <$ string' "or"     <* space <*> parser
+    , toMatch                  <$ string' "match"  <* space <*> parser
+    , toRegexp                 <$ string' "regexp" <* space <*> parser
     , toJsonExtractDoubleArrow <$ string "->>" <* space <*> parser
     , toJsonExtractSingleArrow <$ string "->"  <* space <*> parser
     , toStringConcatenation    <$ string "||"  <* space <*> parser
@@ -232,6 +236,8 @@ binaryRight =
   where
     toAnd rhs lhs                    = Operator (And lhs rhs)
     toOr rhs lhs                     = Operator (Or lhs rhs)
+    toMatch rhs lhs                  = Operator (Match lhs rhs)
+    toRegexp rhs lhs                 = Operator (Regexp lhs rhs)
     toJsonExtractDoubleArrow rhs lhs = Operator (JsonExtractDoubleArrow lhs rhs)
     toJsonExtractSingleArrow rhs lhs = Operator (JsonExtractSingleArrow lhs rhs)
     toStringConcatenation rhs lhs    = Operator (StringConcatenation lhs rhs)
@@ -256,7 +262,7 @@ binaryRightIs :: Parser (Expression -> Expression)
 binaryRightIs =
   choice
     [ string' "not" *> space *> binaryRightIsNot
-    , toIsDistinctFrom <$ string' "distinct" <* space <* string' "from" <* space <*> parser
+    , toIsDistinctFrom <$ string' "distinct" <* space1 <* string' "from" <* space <*> parser
     , toIs <$> parser
     ]
   where
@@ -267,7 +273,7 @@ binaryRightIs =
 binaryRightIsNot :: Parser (Expression -> Expression)
 binaryRightIsNot =
   choice
-    [ toIsNotDistinctFrom <$ string' "distinct" <* space <* string' "from" <* space <*> parser
+    [ toIsNotDistinctFrom <$ string' "distinct" <* space1 <* string' "from" <* space <*> parser
     , toIsNot <$> parser
     ]
   where

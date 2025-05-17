@@ -190,6 +190,18 @@ spec = do
       assertParseSuccess parser "1 AND 2" $
         Operator (And (LiteralInt 1) (LiteralInt 2))
 
-    it "parses OR" $ do
-      assertParseSuccess parser "1 OR 2" $
-        Operator (Or (LiteralInt 1) (LiteralInt 2))
+    it "parses MATCH" $ do
+      assertParseSuccess parser "1 MATCH 2" $
+        Operator (Match (LiteralInt 1) (LiteralInt 2))
+
+    it "parses NOT MATCH" $ do
+      assertParseSuccess parser "1 NOT MATCH 2" $
+        Operator (NotMatch (LiteralInt 1) (LiteralInt 2))
+
+    it "parses REGEXP" $ do
+      assertParseSuccess parser "'12' REGEXP '\\d'" $
+        Operator (Regexp (LiteralString "12") (LiteralString "\\d"))
+
+    it "parses NOT REGEXP" $ do
+      assertParseSuccess parser "'12' NOT REGEXP '\\d'" $
+        Operator (NotRegexp (LiteralString "12") (LiteralString "\\d"))
