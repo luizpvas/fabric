@@ -55,12 +55,12 @@ data Operator
   | JsonExtractSingleArrow Expression Expression
   | JsonExtractDoubleArrow Expression Expression
   | Multiplication Expression Expression
+  | Division Expression Expression
   deriving (Show, Eq)
 
 
 data BinaryOperator
-  = Division Expression Expression
-  | Modulus Expression Expression
+  = Modulus Expression Expression
   | Sum Expression Expression
   | Subtraction Expression Expression
   | BitwiseAnd Expression Expression
@@ -210,9 +210,11 @@ binaryRight =
     , toJsonExtractDoubleArrow <$ string "->>" <* space <*> parser
     , toJsonExtractSingleArrow <$ string "->"  <* space <*> parser
     , toMultiplication         <$ string "*"   <* space <*> parser
+    , toDivision               <$ string "/"   <* space <*> parser
     ]
   where
     toStringConcatenation rhs lhs    = Operator (StringConcatenation lhs rhs)
     toJsonExtractDoubleArrow rhs lhs = Operator (JsonExtractDoubleArrow lhs rhs)
     toJsonExtractSingleArrow rhs lhs = Operator (JsonExtractSingleArrow lhs rhs)
     toMultiplication rhs lhs         = Operator (Multiplication lhs rhs)
+    toDivision rhs lhs               = Operator (Division lhs rhs)
