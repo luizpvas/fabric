@@ -10,6 +10,7 @@ module Compiler.SQL.Expression (parser, Expression(..), Operator(..), BinaryOper
 import Data.Void
 import Text.Megaparsec
 import Text.Megaparsec.Char
+import qualified Compiler.Parser.Name as Name
 import qualified Compiler.Parser.Number as Number
 import qualified Compiler.Parser.String as String
 
@@ -181,7 +182,7 @@ unaryPrefixMinus =
 unaryPostfix :: Parser (Expression -> Expression)
 unaryPostfix =
   choice
-    [ toCollate "NOCASE" <$ string' "collate"
+    [ toCollate <$ string' "collate" <* space <*> Name.variable
     , pure id
     ]
   where
