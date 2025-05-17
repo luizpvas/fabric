@@ -55,3 +55,6 @@ spec = do
 
     it "parses plus operator on numbers" $ do
       assertParseSuccess Expression.parser "+1" (Expression.Operator (Expression.Plus (Expression.LiteralInt 1)))
+
+    it "parses minus operator" $ do
+      assertParseSuccess Expression.parser "-0.1" (Expression.Operator (Expression.Minus (Expression.LiteralFloat 0.1)))

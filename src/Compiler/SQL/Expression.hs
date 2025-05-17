@@ -105,6 +105,7 @@ parser =
     , literalCurrent
     , unaryBitwiseNot
     , unaryPlus
+    , unaryMinus
     ]
 
 
@@ -162,3 +163,8 @@ unaryBitwiseNot =
 unaryPlus :: Parser Expression
 unaryPlus =
   (\e -> Operator (Plus e)) <$ char '+' <*> parser
+
+
+unaryMinus :: Parser Expression
+unaryMinus =
+  (\e -> Operator (Minus e)) <$ char '-' <*> parser
