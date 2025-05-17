@@ -117,3 +117,7 @@ spec = do
     it "parses sum" $ do
       assertParseSuccess parser "1 + 2" $
         Operator (Sum (LiteralInt 1) (LiteralInt 2))
+
+    it "parses subtraction" $ do
+      assertParseSuccess parser "1 - 2" $
+        Operator (Subtraction (LiteralInt 1) (LiteralInt 2))

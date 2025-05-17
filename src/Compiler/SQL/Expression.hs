@@ -58,12 +58,12 @@ data Operator
   | Division Expression Expression
   | Modulus Expression Expression
   | Sum Expression Expression
+  | Subtraction Expression Expression
   deriving (Show, Eq)
 
 
 data BinaryOperator
-  = Subtraction Expression Expression
-  | BitwiseAnd Expression Expression
+  = BitwiseAnd Expression Expression
   | BitwiseOr Expression Expression
   | BitwiseShiftLeft Expression Expression
   | BitwiseShiftRight Expression Expression
@@ -213,6 +213,7 @@ binaryRight =
     , toDivision               <$ string "/"   <* space <*> parser
     , toModulus                <$ string "%"   <* space <*> parser
     , toSum                    <$ string "+"   <* space <*> parser
+    , toSubtraction            <$ string "-"   <* space <*> parser
     ]
   where
     toStringConcatenation rhs lhs    = Operator (StringConcatenation lhs rhs)
@@ -222,3 +223,4 @@ binaryRight =
     toDivision rhs lhs               = Operator (Division lhs rhs)
     toModulus rhs lhs                = Operator (Modulus lhs rhs)
     toSum rhs lhs                    = Operator (Sum lhs rhs)
+    toSubtraction rhs lhs            = Operator (Subtraction lhs rhs)
