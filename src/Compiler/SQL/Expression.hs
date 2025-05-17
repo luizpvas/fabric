@@ -50,12 +50,13 @@ data Operator
   | Collate String Expression
   | IsNull Expression
   | NotNull Expression
+  -- BINARY
+  | StringConcatenation Expression Expression
   deriving (Show, Eq)
 
 
 data BinaryOperator
-  = StringConcatenation Expression Expression
-  | JsonExtractSingleArrow Expression Expression
+  = JsonExtractSingleArrow Expression Expression
   | JsonExtractDoubleArrow Expression Expression
   | Multiplication Expression Expression
   | Division Expression Expression
@@ -99,7 +100,7 @@ data TertiaryOperator
 
 parser :: Parser Expression
 parser =
-  (\expr f -> f expr) <$> primary <* space <*> unaryPostfix
+  (\expr f -> f expr) <$> primary <* space <*> (unaryPostfix <|> binaryRight <|> pure id)
 
 
 primary :: Parser Expression
@@ -185,7 +186,6 @@ unaryPostfix =
     [ toCollate <$ string' "collate" <* space1 <*> Name.variable
     , Operator . IsNull <$ string' "isnull"
     , unaryPostfixNot
-    , pure id
     ]
   where
     toCollate collationName expr =
@@ -201,3 +201,10 @@ unaryPostfixNot =
       choice
         [ Operator . NotNull <$ space <* string' "null"
         ]
+
+
+binaryRight :: Parser (Expression -> Expression)
+binaryRight =
+  fmap toStringConcatenation (string "||" *> space *> parser)
+  where
+    toStringConcatenation rhs lhs = Operator (StringConcatenation lhs rhs)

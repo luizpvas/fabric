@@ -2,7 +2,7 @@
 module Compiler.SQL.ExpressionSpec (spec) where
 
 
-import Compiler.SQL.Expression as Expression
+import Compiler.SQL.Expression
 import Compiler.Parser.Assertion
 import Test.Hspec
 
@@ -11,81 +11,85 @@ spec :: Spec
 spec = do
   describe "literal" $ do
     it "parses literal positive integers" $ do
-      assertParseSuccess Expression.parser "10" $
-        Expression.LiteralInt 10
+      assertParseSuccess parser "10" $
+        LiteralInt 10
 
     it "parses literal hex numbers" $ do
-      assertParseSuccess Expression.parser "0xA" $
-        Expression.LiteralHex 10
+      assertParseSuccess parser "0xA" $
+        LiteralHex 10
 
     it "parses literal floats" $ do
-      assertParseSuccess Expression.parser "0.1" $
-        Expression.LiteralFloat 0.1
+      assertParseSuccess parser "0.1" $
+        LiteralFloat 0.1
 
     it "parses literal strings" $ do
-      assertParseSuccess Expression.parser "'hello'" $
-        Expression.LiteralString "hello"
+      assertParseSuccess parser "'hello'" $
+        LiteralString "hello"
 
     it "parses literal blobs prefixed with uppercase X" $ do
-      assertParseSuccess Expression.parser "X'53514C697465'" $
-        Expression.LiteralBlob "53514C697465"
+      assertParseSuccess parser "X'53514C697465'" $
+        LiteralBlob "53514C697465"
 
     it "parses literal blobs prefixed with lowercase x" $ do
-      assertParseSuccess Expression.parser "x'53514C697465'" $
-        Expression.LiteralBlob "53514C697465"
+      assertParseSuccess parser "x'53514C697465'" $
+        LiteralBlob "53514C697465"
 
     it "parses literal NULL" $ do
-      assertParseSuccess Expression.parser "NULL" Expression.LiteralNull
+      assertParseSuccess parser "NULL" LiteralNull
 
     it "parses literal TRUE" $ do
-      assertParseSuccess Expression.parser "TRUE" Expression.LiteralTrue
+      assertParseSuccess parser "TRUE" LiteralTrue
 
     it "parses literal FALSE" $ do
-      assertParseSuccess Expression.parser "FALSE" Expression.LiteralFalse
+      assertParseSuccess parser "FALSE" LiteralFalse
 
     it "parses literal CURRENT_TIME" $ do
-      assertParseSuccess Expression.parser "CURRENT_TIME" $
-        Expression.LiteralCurrentTime
+      assertParseSuccess parser "CURRENT_TIME" $
+        LiteralCurrentTime
 
     it "parses literal CURRENT_DATE" $ do
-      assertParseSuccess Expression.parser "CURRENT_DATE" $
-        Expression.LiteralCurrentDate
+      assertParseSuccess parser "CURRENT_DATE" $
+        LiteralCurrentDate
 
     it "parses literal CURRENT_TIMESTAMP" $ do
-      assertParseSuccess Expression.parser "CURRENT_TIMESTAMP" $
-        Expression.LiteralCurrentTimestamp
+      assertParseSuccess parser "CURRENT_TIMESTAMP" $
+        LiteralCurrentTimestamp
 
   describe "unary prefix" $ do
     it "parses bitwise-not operator" $ do
-      assertParseSuccess Expression.parser "~1" $
-        Expression.Operator (Expression.BitwiseNot (Expression.LiteralInt 1))
+      assertParseSuccess parser "~1" $
+        Operator (BitwiseNot (LiteralInt 1))
 
     it "parses plus operator on non-numbers" $ do
-      assertParseSuccess Expression.parser "+NULL" $
-        Expression.Operator (Expression.Plus (Expression.LiteralNull))
+      assertParseSuccess parser "+NULL" $
+        Operator (Plus (LiteralNull))
 
     it "parses plus operator on numbers" $ do
-      assertParseSuccess Expression.parser "+1" $
-        Expression.Operator (Expression.Plus (Expression.LiteralInt 1))
+      assertParseSuccess parser "+1" $
+        Operator (Plus (LiteralInt 1))
 
     it "parses minus operator" $ do
-      assertParseSuccess Expression.parser "-0.1" $
-        Expression.Operator (Expression.Minus (Expression.LiteralFloat 0.1))
+      assertParseSuccess parser "-0.1" $
+        Operator (Minus (LiteralFloat 0.1))
 
   describe "unary suffix" $ do
     it "parses COLLATE operator" $ do
-      assertParseSuccess Expression.parser "'hello' COLLATE NOCASE"
-        (Expression.Operator (Expression.Collate "NOCASE" $
-        Expression.LiteralString "hello"))
+      assertParseSuccess parser "'hello' COLLATE NOCASE" $
+        Operator (Collate "NOCASE" (LiteralString "hello"))
 
     it "parses ISNULL operator" $ do
-      assertParseSuccess Expression.parser "NULL ISNULL" $
-        Expression.Operator (Expression.IsNull Expression.LiteralNull)
+      assertParseSuccess parser "NULL ISNULL" $
+        Operator (IsNull LiteralNull)
 
     it "parses NOTNULL operator" $ do
-      assertParseSuccess Expression.parser "NULL NOTNULL" $
-        Expression.Operator (Expression.NotNull Expression.LiteralNull)
+      assertParseSuccess parser "NULL NOTNULL" $
+        Operator (NotNull LiteralNull)
 
     it "parses NOT NULL operator" $ do
-      assertParseSuccess Expression.parser "NULL NOT NULL" $
-        Expression.Operator (Expression.NotNull Expression.LiteralNull)
+      assertParseSuccess parser "NULL NOT NULL" $
+        Operator (NotNull LiteralNull)
+
+  describe "binary" $ do
+    it "parses string concatenation with 2 expressions" $ do
+      assertParseSuccess parser "'x' || 'y'" $
+        Operator (StringConcatenation (LiteralString "x") (LiteralString "y"))
