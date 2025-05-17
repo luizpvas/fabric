@@ -194,9 +194,10 @@ unaryPostfix =
 
 unaryPostfixNot :: Parser (Expression -> Expression)
 unaryPostfixNot =
-  id <$ string' "not" <*> helper
+  string' "not" *> trailing
   where
-    helper =
+    trailing :: Parser (Expression -> Expression)
+    trailing =
       choice
         [ Operator . NotNull <$ space <* string' "null"
         ]
