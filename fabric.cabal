@@ -26,6 +26,7 @@ source-repository head
 library
   exposed-modules:
       Compiler.Database.Relational.Column
+      Compiler.Parser.Name
       Compiler.Parser.Number
       Compiler.Parser.String
       Compiler.SQL.Expression
@@ -64,6 +65,7 @@ test-suite fabric-test
   main-is: Spec.hs
   other-modules:
       Compiler.Parser.Assertion
+      Compiler.Parser.NameSpec
       Compiler.Parser.NumberSpec
       Compiler.Parser.StringSpec
       Compiler.SQL.ExpressionSpec
