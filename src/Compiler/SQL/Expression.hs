@@ -37,6 +37,7 @@ data Expression
 
 
 data Operator
+  -- UNARY
   = BitwiseNot Expression
   | Plus Expression
   | Minus Expression
@@ -44,6 +45,7 @@ data Operator
   | Escape Expression 
   | IsNull Expression
   | NotNull Expression
+  -- BINARY
   | Binary BinaryOperator
   | Tertiary TertiaryOperator
   deriving (Show, Eq)
