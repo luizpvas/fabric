@@ -18,20 +18,10 @@ parser :: Parsec Void String Number
 parser =
   label "number" $
     choice
-      [ negative <$ char '-' <*> parserHelper
-      , positive <$ char '+' <*> parserHelper
-      , parserHelper
+      [ toHex <$ string' "0x" <*> hexDigits
+      , toFloatDecimalOnly <$> decimalDigits <*> (optional exponentDigits)
+      , toIntOrFloat <$> digits <*> (optional decimalDigits) <*> (optional exponentDigits)
       ]
-
-
-parserHelper :: Parsec Void String Number
-parserHelper =
-  choice
-    [ toHex <$ string' "0x" <*> hexDigits
-    , toFloatDecimalOnly <$> decimalDigits <*> (optional exponentDigits)
-    , toIntOrFloat <$> digits <*> (optional decimalDigits) <*> (optional exponentDigits)
-    ]
-
 
 hexDigits :: Parsec Void String String
 hexDigits =
@@ -82,13 +72,3 @@ toFloatDecimalOnly decimalDigits_ Nothing =
   Float (read ("0." ++ decimalDigits_))
 toFloatDecimalOnly decimalDigits_ (Just exponentDigits_) =
   Float (read ("0." ++ decimalDigits_ ++ "e" ++ exponentDigits_))
-
-
-positive :: Number -> Number
-positive = id
-
-
-negative :: Number -> Number
-negative (Int i)   = Int   $ negate i
-negative (Hex h)   = Hex   $ negate h
-negative (Float f) = Float $ negate f

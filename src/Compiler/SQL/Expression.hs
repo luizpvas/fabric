@@ -1,4 +1,8 @@
-module Compiler.SQL.Expression (parser, Expression(..), Operator(..), UnaryOperator(..), BinaryOperator(..), TertiaryOperator(..)) where
+module Compiler.SQL.Expression (parser, Expression(..), Operator(..), BinaryOperator(..), TertiaryOperator(..)) where
+
+-- Here are some funny queries I found along the way. Can you guess their result?
+-- SELECT +++++++++++1;
+-- SELECT ~~~~~~~~~~~1;
 
 import Data.Void
 import Text.Megaparsec
@@ -33,20 +37,15 @@ data Expression
 
 
 data Operator
-  = Unary UnaryOperator
-  | Binary BinaryOperator
-  | Tertiary TertiaryOperator
-  deriving (Show, Eq)
-
-
-data UnaryOperator
-  = PrefixBitwiseNot Expression
-  | PrefixPositive Expression
-  | PrefixNegative Expression
+  = BitwiseNot Expression
+  | Plus Expression
+  | Minus Expression
   | Collate Expression String
   | Escape Expression 
   | IsNull Expression
   | NotNull Expression
+  | Binary BinaryOperator
+  | Tertiary TertiaryOperator
   deriving (Show, Eq)
 
 
@@ -104,6 +103,8 @@ parser =
     , literalTrue
     , literalFalse
     , literalCurrent
+    , unaryBitwiseNot
+    , unaryPlus
     ]
 
 
@@ -151,3 +152,13 @@ literalCurrent =
       , LiteralCurrentTimestamp <$ string' "timestamp"
       , LiteralCurrentTime      <$ string' "time"
       ]
+
+
+unaryBitwiseNot :: Parser Expression
+unaryBitwiseNot =
+  (\e -> Operator (BitwiseNot e)) <$ char '~' <*> parser
+
+
+unaryPlus :: Parser Expression
+unaryPlus =
+  (\e -> Operator (Plus e)) <$ char '+' <*> parser
