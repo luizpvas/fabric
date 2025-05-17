@@ -185,3 +185,11 @@ spec = do
     it "parses IS NOT DISTINCT FROM" $ do
       assertParseSuccess parser "1 IS NOT DISTINCT FROM 2" $ do
         Operator (IsNotDistinctFrom (LiteralInt 1) (LiteralInt 2))
+
+    it "parses AND" $ do
+      assertParseSuccess parser "1 AND 2" $
+        Operator (And (LiteralInt 1) (LiteralInt 2))
+
+    it "parses OR" $ do
+      assertParseSuccess parser "1 OR 2" $
+        Operator (Or (LiteralInt 1) (LiteralInt 2))

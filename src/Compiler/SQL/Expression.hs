@@ -73,6 +73,8 @@ data Operator
   | IsNot Expression Expression
   | IsDistinctFrom Expression Expression
   | IsNotDistinctFrom Expression Expression
+  | And Expression Expression
+  | Or Expression Expression
   deriving (Show, Eq)
 
 
@@ -87,8 +89,6 @@ data BinaryOperator
   | NotRegexp Expression Expression
   | Glob Expression Expression
   | NotGlob Expression Expression
-  | And Expression Expression
-  | Or Expression Expression
   deriving (Show, Eq)
 
 
@@ -206,6 +206,8 @@ binaryRight :: Parser (Expression -> Expression)
 binaryRight =
   choice
     [ string' "is" *> space *> binaryRightIs
+    , toAnd                    <$ string' "and" <* space <*> parser
+    , toOr                     <$ string' "or"  <* space <*> parser
     , toJsonExtractDoubleArrow <$ string "->>" <* space <*> parser
     , toJsonExtractSingleArrow <$ string "->"  <* space <*> parser
     , toStringConcatenation    <$ string "||"  <* space <*> parser
@@ -228,6 +230,8 @@ binaryRight =
     , toEquals                 <$ string "="   <* space <*> parser
     ]
   where
+    toAnd rhs lhs                    = Operator (And lhs rhs)
+    toOr rhs lhs                     = Operator (Or lhs rhs)
     toJsonExtractDoubleArrow rhs lhs = Operator (JsonExtractDoubleArrow lhs rhs)
     toJsonExtractSingleArrow rhs lhs = Operator (JsonExtractSingleArrow lhs rhs)
     toStringConcatenation rhs lhs    = Operator (StringConcatenation lhs rhs)
