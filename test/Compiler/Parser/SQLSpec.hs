@@ -1,8 +1,7 @@
-{-# LANGUAGE OverloadedStrings #-}
-module Compiler.SQL.ExpressionSpec (spec) where
+module Compiler.Parser.SQLSpec (spec) where
 
 
-import Compiler.SQL.Expression
+import Compiler.Parser.SQL
 import Compiler.Parser.Assertion
 import Test.Hspec
 

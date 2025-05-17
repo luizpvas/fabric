@@ -1,4 +1,4 @@
-module Compiler.SQL.Expression (parser, Expression(..), Operator(..), BinaryOperator(..), TertiaryOperator(..)) where
+module Compiler.Parser.SQL (parser, Expression(..), Operator(..), BinaryOperator(..), TertiaryOperator(..)) where
 
 
 -- Here are some interesting queries I found while writing this parser:

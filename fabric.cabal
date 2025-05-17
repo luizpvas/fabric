@@ -28,8 +28,8 @@ library
       Compiler.Database.Relational.Column
       Compiler.Parser.Name
       Compiler.Parser.Number
+      Compiler.Parser.SQL
       Compiler.Parser.String
-      Compiler.SQL.Expression
       Lib
   other-modules:
       Paths_fabric
@@ -67,8 +67,8 @@ test-suite fabric-test
       Compiler.Parser.Assertion
       Compiler.Parser.NameSpec
       Compiler.Parser.NumberSpec
+      Compiler.Parser.SQLSpec
       Compiler.Parser.StringSpec
-      Compiler.SQL.ExpressionSpec
       Paths_fabric
   autogen-modules:
       Paths_fabric
