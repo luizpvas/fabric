@@ -21,3 +21,9 @@ spec = do
 
     it "parses a literal string" $ do
       assertParseSuccess Expression.parser "'hello'" (Expression.LiteralString "hello")
+
+    it "parses a literal blob prefixed with uppercase X" $ do
+      assertParseSuccess Expression.parser "X'53514C697465'" (Expression.LiteralBlob "53514C697465")
+
+    it "parses a literal blob prefixed with lowercase x" $ do
+      assertParseSuccess Expression.parser "x'53514C697465'" (Expression.LiteralBlob "53514C697465")

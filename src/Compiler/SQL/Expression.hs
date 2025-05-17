@@ -95,6 +95,7 @@ parser =
   choice
     [ literalNumber
     , literalString
+    , literalBlob
     ]
 
 
@@ -110,3 +111,8 @@ literalNumber =
 literalString :: Parser Expression
 literalString =
   fmap LiteralString String.singleQuotedParser
+
+
+literalBlob :: Parser Expression
+literalBlob =
+  LiteralBlob <$ char' 'x' <* char '\'' <*> many hexDigitChar <* char '\''
