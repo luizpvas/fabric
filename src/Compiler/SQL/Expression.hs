@@ -1,11 +1,12 @@
 module Compiler.SQL.Expression (parser, Expression(..), Operator(..), BinaryOperator(..), TertiaryOperator(..)) where
 
 
--- Here are some funny queries I found along the way. Can you guess their result?
--- SELECT +++++++++++1;
--- SELECT ~~~~~~~~~~~1;
--- SELECT 'HELLO ' COLLATE RTRIM = 'HELLO';
--- SELECT NOT NULL NOTNULL IS NOT NULL;
+-- Here are some interesting queries I found while writing this parser:
+--
+-- SELECT +++++++++++1
+-- SELECT ~~~~~~~~~~~1
+-- SELECT 'HELLO ' COLLATE RTRIM = 'HELLO'
+-- SELECT NOT NULL NOTNULL IS NOT NULL
 
 
 import Data.Void
@@ -79,6 +80,8 @@ data Operator
   | NotMatch Expression Expression
   | Regexp Expression Expression
   | NotRegexp Expression Expression
+  | Glob Expression Expression
+  | NotGlob Expression Expression
   deriving (Show, Eq)
 
 
@@ -87,8 +90,6 @@ data BinaryOperator
   | NotIn Expression Expression
   | Like Expression Expression -- TODO: handle ESCAPE
   | NotLike Expression Expression
-  | Glob Expression Expression
-  | NotGlob Expression Expression
   deriving (Show, Eq)
 
 
@@ -195,13 +196,15 @@ unaryPostfixNot :: Parser (Expression -> Expression)
 unaryPostfixNot =
   choice
     [ toNotNull   <$ string' "null"
-    , toNotMatch  <$ string' "match" <* space <*> parser
+    , toNotMatch  <$ string' "match"  <* space <*> parser
     , toNotRegexp <$ string' "regexp" <* space <*> parser
+    , toNotGlob   <$ string' "glob"   <* space <*> parser
     ]
   where
     toNotNull           = Operator . NotNull
     toNotMatch rhs lhs  = Operator (NotMatch lhs rhs)
     toNotRegexp rhs lhs = Operator (NotRegexp lhs rhs)
+    toNotGlob rhs lhs   = Operator (NotGlob lhs rhs)
 
 
 binaryRight :: Parser (Expression -> Expression)
@@ -212,6 +215,7 @@ binaryRight =
     , toOr                     <$ string' "or"     <* space <*> parser
     , toMatch                  <$ string' "match"  <* space <*> parser
     , toRegexp                 <$ string' "regexp" <* space <*> parser
+    , toGlob                   <$ string' "glob"   <* space <*> parser
     , toJsonExtractDoubleArrow <$ string "->>" <* space <*> parser
     , toJsonExtractSingleArrow <$ string "->"  <* space <*> parser
     , toStringConcatenation    <$ string "||"  <* space <*> parser
@@ -238,6 +242,7 @@ binaryRight =
     toOr rhs lhs                     = Operator (Or lhs rhs)
     toMatch rhs lhs                  = Operator (Match lhs rhs)
     toRegexp rhs lhs                 = Operator (Regexp lhs rhs)
+    toGlob rhs lhs                   = Operator (Glob lhs rhs)
     toJsonExtractDoubleArrow rhs lhs = Operator (JsonExtractDoubleArrow lhs rhs)
     toJsonExtractSingleArrow rhs lhs = Operator (JsonExtractSingleArrow lhs rhs)
     toStringConcatenation rhs lhs    = Operator (StringConcatenation lhs rhs)

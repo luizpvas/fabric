@@ -205,3 +205,11 @@ spec = do
     it "parses NOT REGEXP" $ do
       assertParseSuccess parser "'12' NOT REGEXP '\\d'" $
         Operator (NotRegexp (LiteralString "12") (LiteralString "\\d"))
+
+    it "parses GLOB" $ do
+      assertParseSuccess parser "'x' GLOB 'y'" $
+        Operator (Glob (LiteralString "x") (LiteralString "y"))
+
+    it "parses NOT GLOB" $ do
+      assertParseSuccess parser "'x' NOT GLOB 'y'" $
+        Operator (NotGlob (LiteralString "x") (LiteralString "y"))
