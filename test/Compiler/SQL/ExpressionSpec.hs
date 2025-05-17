@@ -90,6 +90,14 @@ spec = do
         Operator (NotNull LiteralNull)
 
   describe "binary" $ do
-    it "parses string concatenation with 2 expressions" $ do
+    it "parses string concatenation" $ do
       assertParseSuccess parser "'x' || 'y'" $
         Operator (StringConcatenation (LiteralString "x") (LiteralString "y"))
+
+    it "parses JSON extract single arrow" $ do
+      assertParseSuccess parser "'{}'->'$'" $
+        Operator (JsonExtractSingleArrow (LiteralString "{}") (LiteralString "$"))
+
+    it "parses JSON extract double arrow" $ do
+      assertParseSuccess parser "'[0,1,2]'->>2" $
+        Operator (JsonExtractDoubleArrow (LiteralString "[0,1,2]") (LiteralInt 2))

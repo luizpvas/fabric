@@ -52,13 +52,13 @@ data Operator
   | NotNull Expression
   -- BINARY
   | StringConcatenation Expression Expression
+  | JsonExtractSingleArrow Expression Expression
+  | JsonExtractDoubleArrow Expression Expression
   deriving (Show, Eq)
 
 
 data BinaryOperator
-  = JsonExtractSingleArrow Expression Expression
-  | JsonExtractDoubleArrow Expression Expression
-  | Multiplication Expression Expression
+  = Multiplication Expression Expression
   | Division Expression Expression
   | Modulus Expression Expression
   | Sum Expression Expression
@@ -205,6 +205,12 @@ unaryPostfixNot =
 
 binaryRight :: Parser (Expression -> Expression)
 binaryRight =
-  fmap toStringConcatenation (string "||" *> space *> parser)
+  choice
+    [ toStringConcatenation    <$ string "||"  <* space <*> parser
+    , toJsonExtractDoubleArrow <$ string "->>" <* space <*> parser
+    , toJsonExtractSingleArrow <$ string "->"  <* space <*> parser
+    ]
   where
-    toStringConcatenation rhs lhs = Operator (StringConcatenation lhs rhs)
+    toStringConcatenation rhs lhs    = Operator (StringConcatenation lhs rhs)
+    toJsonExtractDoubleArrow rhs lhs = Operator (JsonExtractDoubleArrow lhs rhs)
+    toJsonExtractSingleArrow rhs lhs = Operator (JsonExtractSingleArrow lhs rhs)

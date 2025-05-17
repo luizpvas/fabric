@@ -11,6 +11,7 @@
 * Deployment pipeline
 * Built to last
   - Easy to change
+  - Can't forget to handle errors
 
 
 ### Writing style
