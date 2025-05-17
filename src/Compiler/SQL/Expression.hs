@@ -4,6 +4,7 @@ import Data.Void
 import Text.Megaparsec
 import Text.Megaparsec.Char
 import qualified Compiler.Parser.Number as Number
+import qualified Compiler.Parser.String as String
 
 
 -- PARSER
@@ -93,6 +94,7 @@ parser :: Parser Expression
 parser =
   choice
     [ literalNumber
+    , literalString
     ]
 
 
@@ -104,3 +106,7 @@ literalNumber =
     toExpressionNumber (Number.Hex h)   = LiteralHex h
     toExpressionNumber (Number.Float f) = LiteralFloat f
 
+
+literalString :: Parser Expression
+literalString =
+  fmap LiteralString String.singleQuotedParser

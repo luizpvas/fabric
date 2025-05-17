@@ -18,3 +18,6 @@ spec = do
 
     it "parses a literal negative integer" $ do
       assertParseSuccess Expression.parser "0.1" (Expression.LiteralFloat 0.1)
+
+    it "parses a literal string" $ do
+      assertParseSuccess Expression.parser "'hello'" (Expression.LiteralString "hello")
