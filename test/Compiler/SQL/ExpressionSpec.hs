@@ -101,3 +101,7 @@ spec = do
     it "parses JSON extract double arrow" $ do
       assertParseSuccess parser "'[0,1,2]'->>2" $
         Operator (JsonExtractDoubleArrow (LiteralString "[0,1,2]") (LiteralInt 2))
+
+    it "parses multiplication" $ do
+      assertParseSuccess parser "1 * 2" $
+        Operator (Multiplication (LiteralInt 1) (LiteralInt 2))
