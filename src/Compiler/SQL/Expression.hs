@@ -5,6 +5,7 @@ module Compiler.SQL.Expression (parser, Expression(..), Operator(..), BinaryOper
 -- SELECT +++++++++++1;
 -- SELECT ~~~~~~~~~~~1;
 -- SELECT 'HELLO ' COLLATE RTRIM = 'HELLO';
+-- SELECT NOT NULL NOTNULL IS NOT NULL;
 
 
 import Data.Void
@@ -47,7 +48,6 @@ data Operator
   | Minus Expression
   -- UNARY SUFFIX
   | Collate String Expression
-  | Escape Expression
   | IsNull Expression
   | NotNull Expression
   deriving (Show, Eq)
@@ -81,7 +81,7 @@ data BinaryOperator
   | NotIn Expression Expression
   | Match Expression Expression
   | NotMatch Expression Expression
-  | Like Expression Expression
+  | Like Expression Expression -- TODO: handle ESCAPE
   | NotLike Expression Expression
   | Regexp Expression Expression
   | NotRegexp Expression Expression
@@ -182,9 +182,21 @@ unaryPrefixMinus =
 unaryPostfix :: Parser (Expression -> Expression)
 unaryPostfix =
   choice
-    [ toCollate <$ string' "collate" <* space <*> Name.variable
+    [ toCollate <$ string' "collate" <* space1 <*> Name.variable
+    , Operator . IsNull <$ string' "isnull"
+    , unaryPostfixNot
     , pure id
     ]
   where
     toCollate collationName expr =
       Operator (Collate collationName expr)
+
+
+unaryPostfixNot :: Parser (Expression -> Expression)
+unaryPostfixNot =
+  id <$ string' "not" <*> helper
+  where
+    helper =
+      choice
+        [ Operator . NotNull <$ space <* string' "null"
+        ]
