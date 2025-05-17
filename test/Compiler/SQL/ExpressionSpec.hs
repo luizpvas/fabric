@@ -37,3 +37,12 @@ spec = do
     it "parses literal FALSE" $ do
       assertParseSuccess Expression.parser "FALSE" Expression.LiteralFalse
 
+    it "parses literal CURRENT_TIME" $ do
+      assertParseSuccess Expression.parser "CURRENT_TIME" Expression.LiteralCurrentTime
+
+    it "parses literal CURRENT_DATE" $ do
+      assertParseSuccess Expression.parser "CURRENT_DATE" Expression.LiteralCurrentDate
+
+    it "parses literal CURRENT_TIMESTAMP" $ do
+      assertParseSuccess Expression.parser "CURRENT_TIMESTAMP" Expression.LiteralCurrentTimestamp
+

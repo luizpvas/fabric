@@ -99,6 +99,7 @@ parser =
     , literalNull
     , literalTrue
     , literalFalse
+    , literalCurrent
     ]
 
 
@@ -134,3 +135,14 @@ literalTrue =
 literalFalse :: Parser Expression
 literalFalse =
   LiteralFalse <$ (string' "false")
+
+literalCurrent :: Parser Expression
+literalCurrent =
+  string' "current_" *> trailing
+  where
+    trailing :: Parser Expression
+    trailing = choice
+      [ LiteralCurrentDate      <$ string' "date"
+      , LiteralCurrentTimestamp <$ string' "timestamp"
+      , LiteralCurrentTime      <$ string' "time"
+      ]
