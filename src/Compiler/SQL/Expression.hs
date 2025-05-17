@@ -63,15 +63,15 @@ data Operator
   | BitwiseOr Expression Expression
   | BitwiseShiftLeft Expression Expression
   | BitwiseShiftRight Expression Expression
+  | LessThan Expression Expression
+  | LessThanOrEqualTo Expression Expression
+  | GreaterThan Expression Expression
+  | GreaterThanOrEqualTo Expression Expression
   deriving (Show, Eq)
 
 
 data BinaryOperator
-  = LessThan Expression Expression
-  | GreaterThan Expression Expression
-  | LessThanOrEqual Expression Expression
-  | GreaterThanOrEqual Expression Expression
-  | Equals Expression Expression
+  = Equals Expression Expression
   | DoubleEquals Expression Expression
   | NotEquals String Expression Expression
   | Is Expression Expression
@@ -218,6 +218,10 @@ binaryRight =
     , toBitwiseOr              <$ string "|"   <* space <*> parser
     , toBitwiseShiftLeft       <$ string "<<"  <* space <*> parser
     , toBitwiseShiftRight      <$ string ">>"  <* space <*> parser
+    , toLessThanOrEqualTo      <$ string "<="  <* space <*> parser
+    , toLessThan               <$ string "<"   <* space <*> parser
+    , toGreaterThanOrEqualTo   <$ string ">="  <* space <*> parser
+    , toGreaterThan            <$ string ">"   <* space <*> parser
     ]
   where
     toStringConcatenation rhs lhs    = Operator (StringConcatenation lhs rhs)
@@ -232,3 +236,7 @@ binaryRight =
     toBitwiseOr rhs lhs              = Operator (BitwiseOr lhs rhs)
     toBitwiseShiftLeft rhs lhs       = Operator (BitwiseShiftLeft lhs rhs)
     toBitwiseShiftRight rhs lhs      = Operator (BitwiseShiftRight lhs rhs)
+    toLessThan rhs lhs               = Operator (LessThan lhs rhs)
+    toLessThanOrEqualTo rhs lhs      = Operator (LessThanOrEqualTo lhs rhs)
+    toGreaterThan rhs lhs            = Operator (GreaterThan lhs rhs)
+    toGreaterThanOrEqualTo rhs lhs   = Operator (GreaterThanOrEqualTo lhs rhs)

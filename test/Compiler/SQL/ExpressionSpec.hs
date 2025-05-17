@@ -137,3 +137,19 @@ spec = do
     it "parses bitwise shift right" $ do
       assertParseSuccess parser "1 >> 2" $
         Operator (BitwiseShiftRight (LiteralInt 1) (LiteralInt 2))
+
+    it "parses less than" $ do
+      assertParseSuccess parser "1 < 2" $
+        Operator (LessThan (LiteralInt 1) (LiteralInt 2))
+
+    it "parses less than or equal to" $ do
+      assertParseSuccess parser "1 <= 2" $
+        Operator (LessThanOrEqualTo (LiteralInt 1) (LiteralInt 2))
+
+    it "parses greater than" $ do
+      assertParseSuccess parser "1 > 2" $
+        Operator (GreaterThan (LiteralInt 1) (LiteralInt 2))
+
+    it "parses greater than or equal to" $ do
+      assertParseSuccess parser "1 >= 2" $
+        Operator (GreaterThanOrEqualTo (LiteralInt 1) (LiteralInt 2))
