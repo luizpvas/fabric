@@ -121,3 +121,19 @@ spec = do
     it "parses subtraction" $ do
       assertParseSuccess parser "1 - 2" $
         Operator (Subtraction (LiteralInt 1) (LiteralInt 2))
+
+    it "parses bitwise and" $ do
+      assertParseSuccess parser "1 & 2" $
+        Operator (BitwiseAnd (LiteralInt 1) (LiteralInt 2))
+
+    it "parses bitwise or" $ do
+      assertParseSuccess parser "1 | 2" $
+        Operator (BitwiseOr (LiteralInt 1) (LiteralInt 2))
+
+    it "parses bitwise shift left" $ do
+      assertParseSuccess parser "1 << 2" $
+        Operator (BitwiseShiftLeft (LiteralInt 1) (LiteralInt 2))
+
+    it "parses bitwise shift right" $ do
+      assertParseSuccess parser "1 >> 2" $
+        Operator (BitwiseShiftRight (LiteralInt 1) (LiteralInt 2))

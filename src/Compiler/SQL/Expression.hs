@@ -46,7 +46,7 @@ data Operator
   = BitwiseNot Expression
   | Plus Expression
   | Minus Expression
-  -- UNARY SUFFIX
+  -- UNARY POSTFIX
   | Collate String Expression
   | IsNull Expression
   | NotNull Expression
@@ -59,15 +59,15 @@ data Operator
   | Modulus Expression Expression
   | Sum Expression Expression
   | Subtraction Expression Expression
+  | BitwiseAnd Expression Expression
+  | BitwiseOr Expression Expression
+  | BitwiseShiftLeft Expression Expression
+  | BitwiseShiftRight Expression Expression
   deriving (Show, Eq)
 
 
 data BinaryOperator
-  = BitwiseAnd Expression Expression
-  | BitwiseOr Expression Expression
-  | BitwiseShiftLeft Expression Expression
-  | BitwiseShiftRight Expression Expression
-  | LessThan Expression Expression
+  = LessThan Expression Expression
   | GreaterThan Expression Expression
   | LessThanOrEqual Expression Expression
   | GreaterThanOrEqual Expression Expression
@@ -214,6 +214,10 @@ binaryRight =
     , toModulus                <$ string "%"   <* space <*> parser
     , toSum                    <$ string "+"   <* space <*> parser
     , toSubtraction            <$ string "-"   <* space <*> parser
+    , toBitwiseAnd             <$ string "&"   <* space <*> parser
+    , toBitwiseOr              <$ string "|"   <* space <*> parser
+    , toBitwiseShiftLeft       <$ string "<<"  <* space <*> parser
+    , toBitwiseShiftRight      <$ string ">>"  <* space <*> parser
     ]
   where
     toStringConcatenation rhs lhs    = Operator (StringConcatenation lhs rhs)
@@ -224,3 +228,7 @@ binaryRight =
     toModulus rhs lhs                = Operator (Modulus lhs rhs)
     toSum rhs lhs                    = Operator (Sum lhs rhs)
     toSubtraction rhs lhs            = Operator (Subtraction lhs rhs)
+    toBitwiseAnd rhs lhs             = Operator (BitwiseAnd lhs rhs)
+    toBitwiseOr rhs lhs              = Operator (BitwiseOr lhs rhs)
+    toBitwiseShiftLeft rhs lhs       = Operator (BitwiseShiftLeft lhs rhs)
+    toBitwiseShiftRight rhs lhs      = Operator (BitwiseShiftRight lhs rhs)
