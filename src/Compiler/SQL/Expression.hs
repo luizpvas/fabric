@@ -1,8 +1,10 @@
 module Compiler.SQL.Expression (parser, Expression(..), Operator(..), BinaryOperator(..), TertiaryOperator(..)) where
 
+
 -- Here are some funny queries I found along the way. Can you guess their result?
 -- SELECT +++++++++++1;
 -- SELECT ~~~~~~~~~~~1;
+
 
 import Data.Void
 import Text.Megaparsec
@@ -37,17 +39,15 @@ data Expression
 
 
 data Operator
-  -- UNARY
+  -- UNARY PREFIX
   = BitwiseNot Expression
   | Plus Expression
   | Minus Expression
-  | Collate Expression String
+  -- UNARY SUFFIX
+  | Collate String Expression
   | Escape Expression 
   | IsNull Expression
   | NotNull Expression
-  -- BINARY
-  | Binary BinaryOperator
-  | Tertiary TertiaryOperator
   deriving (Show, Eq)
 
 
@@ -97,6 +97,11 @@ data TertiaryOperator
 
 parser :: Parser Expression
 parser =
+  (\expr f -> f expr) <$> primary <* space <*> unaryPostfix
+
+
+primary :: Parser Expression
+primary =
   choice
     [ literalNumber
     , literalString
@@ -109,6 +114,17 @@ parser =
     , unaryPlus
     , unaryMinus
     ]
+
+
+unaryPostfix :: Parser (Expression -> Expression)
+unaryPostfix =
+  choice
+    [ toCollate "NOCASE" <$ string' "collate"
+    , pure id
+    ]
+  where
+    toCollate collationName expr =
+      Operator (Collate collationName expr)
 
 
 literalNumber :: Parser Expression
@@ -159,14 +175,14 @@ literalCurrent =
 
 unaryBitwiseNot :: Parser Expression
 unaryBitwiseNot =
-  (\e -> Operator (BitwiseNot e)) <$ char '~' <*> parser
+  Operator . BitwiseNot <$ char '~' <*> parser
 
 
 unaryPlus :: Parser Expression
 unaryPlus =
-  (\e -> Operator (Plus e)) <$ char '+' <*> parser
+  Operator . Plus <$ char '+' <*> parser
 
 
 unaryMinus :: Parser Expression
 unaryMinus =
-  (\e -> Operator (Minus e)) <$ char '-' <*> parser
+  Operator . Minus <$ char '-' <*> parser

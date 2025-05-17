@@ -46,7 +46,7 @@ spec = do
     it "parses literal CURRENT_TIMESTAMP" $ do
       assertParseSuccess Expression.parser "CURRENT_TIMESTAMP" Expression.LiteralCurrentTimestamp
 
-  describe "unary" $ do
+  describe "unary prefix" $ do
     it "parses bitwise-not operator" $ do
       assertParseSuccess Expression.parser "~1" (Expression.Operator (Expression.BitwiseNot (Expression.LiteralInt 1)))
 
@@ -58,3 +58,8 @@ spec = do
 
     it "parses minus operator" $ do
       assertParseSuccess Expression.parser "-0.1" (Expression.Operator (Expression.Minus (Expression.LiteralFloat 0.1)))
+
+  describe "unary suffix" $ do
+    it "parses COLLATE operator" $ do
+      assertParseSuccess Expression.parser "'hello' COLLATE NOCASE"
+        (Expression.Operator (Expression.Collate "NOCASE" (Expression.LiteralString "hello")))
