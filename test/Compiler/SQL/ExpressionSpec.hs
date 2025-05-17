@@ -109,3 +109,7 @@ spec = do
     it "parses division" $ do
       assertParseSuccess parser "1 / 2" $
         Operator (Division (LiteralInt 1) (LiteralInt 2))
+
+    it "parses modulus (reminder)" $ do
+      assertParseSuccess parser "1 % 2" $
+        Operator (Modulus (LiteralInt 1) (LiteralInt 2))
