@@ -205,7 +205,8 @@ unaryPostfixNot =
 binaryRight :: Parser (Expression -> Expression)
 binaryRight =
   choice
-    [ toJsonExtractDoubleArrow <$ string "->>" <* space <*> parser
+    [ string' "is" *> space *> binaryRightIs
+    , toJsonExtractDoubleArrow <$ string "->>" <* space <*> parser
     , toJsonExtractSingleArrow <$ string "->"  <* space <*> parser
     , toStringConcatenation    <$ string "||"  <* space <*> parser
     , toBitwiseShiftLeft       <$ string "<<"  <* space <*> parser
@@ -215,7 +216,6 @@ binaryRight =
     , toNotEquals              <$ string "!="  <* space <*> parser
     , toGreaterThanOrEqualTo   <$ string ">="  <* space <*> parser
     , toEquals                 <$ string "=="  <* space <*> parser
-    , binaryRightIs
     , toMultiplication         <$ string "*"   <* space <*> parser
     , toDivision               <$ string "/"   <* space <*> parser
     , toModulus                <$ string "%"   <* space <*> parser
@@ -250,10 +250,10 @@ binaryRight =
 
 binaryRightIs :: Parser (Expression -> Expression)
 binaryRightIs =
-  string' "is" *> space *> choice
-    [ binaryRightIsNot
+  choice
+    [ string' "not" *> space *> binaryRightIsNot
     , toIsDistinctFrom <$ string' "distinct" <* space <* string' "from" <* space <*> parser
-    , toIs             <$> parser
+    , toIs <$> parser
     ]
   where
     toIsDistinctFrom rhs lhs = Operator (IsDistinctFrom lhs rhs)
@@ -262,7 +262,7 @@ binaryRightIs =
 
 binaryRightIsNot :: Parser (Expression -> Expression)
 binaryRightIsNot =
-  string' "not" *> space *> choice
+  choice
     [ toIsNotDistinctFrom <$ string' "distinct" <* space <* string' "from" <* space <*> parser
     , toIsNot <$> parser
     ]
