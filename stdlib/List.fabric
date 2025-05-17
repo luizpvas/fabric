@@ -12,8 +12,8 @@ type List a = Platform.List a
 map : (a -> b) -> List a -> List b
 map = fn f list do
   case list
-  [] -> []
-  x :: xs -> f x :: map f xs
+    [] -> []
+    x :: xs -> f x :: map f xs
   end
 end
 
@@ -26,7 +26,21 @@ end
 filter : (a -> Bool) -> List a -> List a
 filter = fn test list do
   case list
-  [] -> []
-  x :: xs -> if test x do x :: filter xs else filter xs end
+    [] -> []
+    x :: xs -> if test x do x :: filter xs else filter xs end
+  end
+end
+
+
+-- Determine if a list is empty.
+--
+--   fabric> List.empty? [ 1 ]
+--   False
+--
+empty? : List a -> Bool
+empty? = fn list do
+  case list
+    [] -> True
+    _  -> False
   end
 end

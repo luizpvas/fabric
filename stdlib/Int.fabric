@@ -9,7 +9,8 @@ type Int = Platform.Int
 type Int.Positive = Int<greater_than? 0>
 
 
--- Determine if `num` is greater than `other`. This function is an alias to `>`.
+-- Determine if `num` is greater than `other`. This function is an alias to the
+-- operator `(>)`.
 --
 --   fabric> Int.greater_than? 0 1
 --   True

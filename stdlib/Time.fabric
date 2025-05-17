@@ -1,0 +1,54 @@
+module Time exposing (..)
+
+
+type Epoch = Epoch Int.Positive
+
+
+type Year        = Int
+type Month       = Int<greater_than? 0, less_than? 13>
+type Day         = Int<greater_than? 0, less_than? 32>
+type Hour        = Int<greater_than? -1, less_than? 25>
+type Minute      = Int<greater_than? -1, less_than? 61>
+type Second      = Int<greater_than? -1, less_than? 61>
+type Microsecond = Int<greater_than? -1, less_than? 1_000_000>
+type Zone        = UTC
+
+
+type DateTime =
+  { year        : Year
+  , month       : Month
+  , day         : Day
+  , hour        : Hour
+  , minute      : Minute
+  , second      : Second
+  , microsecond : Microsecond
+  , zone        : Zone
+  }
+
+
+-- Convert the seconds
+--
+--   fabric> Time.secondsToEpoch 1747404553
+--   Epoch 1747404553
+--
+secondsToEpoch : Int.Positive -> Epoch
+secondsToEpoch = Epoch
+
+
+millisecondsToEpoch : Int.Positive -> Epoch
+millisecondsToEpoch = fn ms do
+  Epoch (ms / 1_000)
+end
+
+
+microsecondsToEpoch : Int.Positive -> Epoch
+microsecondsToEpoch = fn µs do
+  Epoch (µs / 1_000_000)
+end
+  
+
+-- Convert the Unix timestamp, the amount of seconds since 1970-01-01, to a
+-- DateTime.
+fromEpoch :: Epoch -> DateTime
+fromEpoch epoch =
+  todo "implement me"
