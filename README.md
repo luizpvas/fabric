@@ -6,7 +6,7 @@
 * Type constraints
 * Batteries included
   - Emails, Redis, SQLs, Queues, Storage, Testing
-* For the web
+* Tailored the web
   - CSRF/Sessions/Websockets
 * Deployment pipeline
 * Built to last

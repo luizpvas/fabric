@@ -169,3 +169,19 @@ spec = do
     it "parses not equals with !=" $ do
       assertParseSuccess parser "1 != 2" $ do
         Operator (NotEquals (LiteralInt 1) (LiteralInt 2))
+
+    it "parses IS" $ do
+      assertParseSuccess parser "1 IS 2" $ do
+        Operator (Is (LiteralInt 1) (LiteralInt 2))
+
+    it "parses IS NOT" $ do
+      assertParseSuccess parser "1 IS NOT 2" $ do
+        Operator (IsNot (LiteralInt 1) (LiteralInt 2))
+
+    it "parses IS DISTINCT FROM" $ do
+      assertParseSuccess parser "1 IS DISTINCT FROM 2" $ do
+        Operator (IsDistinctFrom (LiteralInt 1) (LiteralInt 2))
+
+    it "parses IS NOT DISTINCT FROM" $ do
+      assertParseSuccess parser "1 IS NOT DISTINCT FROM 2" $ do
+        Operator (IsNotDistinctFrom (LiteralInt 1) (LiteralInt 2))

@@ -69,15 +69,15 @@ data Operator
   | GreaterThanOrEqualTo Expression Expression
   | Equals Expression Expression
   | NotEquals Expression Expression
+  | Is Expression Expression
+  | IsNot Expression Expression
+  | IsDistinctFrom Expression Expression
+  | IsNotDistinctFrom Expression Expression
   deriving (Show, Eq)
 
 
 data BinaryOperator
-  = Is Expression Expression
-  | IsNot Expression Expression
-  | IsDistinctFrom Expression Expression
-  | IsNotDistinctFrom Expression Expression
-  | In Expression Expression
+  = In Expression Expression
   | NotIn Expression Expression
   | Match Expression Expression
   | NotMatch Expression Expression
@@ -204,7 +204,6 @@ unaryPostfixNot =
 
 binaryRight :: Parser (Expression -> Expression)
 binaryRight =
-  -- NOTE: operators are sorted from the amount of characters they have.
   choice
     [ toJsonExtractDoubleArrow <$ string "->>" <* space <*> parser
     , toJsonExtractSingleArrow <$ string "->"  <* space <*> parser
@@ -216,6 +215,7 @@ binaryRight =
     , toNotEquals              <$ string "!="  <* space <*> parser
     , toGreaterThanOrEqualTo   <$ string ">="  <* space <*> parser
     , toEquals                 <$ string "=="  <* space <*> parser
+    , binaryRightIs
     , toMultiplication         <$ string "*"   <* space <*> parser
     , toDivision               <$ string "/"   <* space <*> parser
     , toModulus                <$ string "%"   <* space <*> parser
@@ -246,3 +246,26 @@ binaryRight =
     toBitwiseOr rhs lhs              = Operator (BitwiseOr lhs rhs)
     toLessThan rhs lhs               = Operator (LessThan lhs rhs)
     toGreaterThan rhs lhs            = Operator (GreaterThan lhs rhs)
+
+
+binaryRightIs :: Parser (Expression -> Expression)
+binaryRightIs =
+  string' "is" *> space *> choice
+    [ binaryRightIsNot
+    , toIsDistinctFrom <$ string' "distinct" <* space <* string' "from" <* space <*> parser
+    , toIs             <$> parser
+    ]
+  where
+    toIsDistinctFrom rhs lhs = Operator (IsDistinctFrom lhs rhs)
+    toIs rhs lhs             = Operator (Is lhs rhs)
+
+
+binaryRightIsNot :: Parser (Expression -> Expression)
+binaryRightIsNot =
+  string' "not" *> space *> choice
+    [ toIsNotDistinctFrom <$ string' "distinct" <* space <* string' "from" <* space <*> parser
+    , toIsNot <$> parser
+    ]
+  where
+    toIsNot rhs lhs = Operator (IsNot lhs rhs)
+    toIsNotDistinctFrom rhs lhs = Operator (IsNotDistinctFrom lhs rhs)
