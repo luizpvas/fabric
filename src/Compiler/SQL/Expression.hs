@@ -67,14 +67,13 @@ data Operator
   | LessThanOrEqualTo Expression Expression
   | GreaterThan Expression Expression
   | GreaterThanOrEqualTo Expression Expression
+  | Equals Expression Expression
+  | NotEquals Expression Expression
   deriving (Show, Eq)
 
 
 data BinaryOperator
-  = Equals Expression Expression
-  | DoubleEquals Expression Expression
-  | NotEquals String Expression Expression
-  | Is Expression Expression
+  = Is Expression Expression
   | IsNot Expression Expression
   | IsDistinctFrom Expression Expression
   | IsNotDistinctFrom Expression Expression
@@ -205,10 +204,18 @@ unaryPostfixNot =
 
 binaryRight :: Parser (Expression -> Expression)
 binaryRight =
+  -- NOTE: operators are sorted from the amount of characters they have.
   choice
-    [ toStringConcatenation    <$ string "||"  <* space <*> parser
-    , toJsonExtractDoubleArrow <$ string "->>" <* space <*> parser
+    [ toJsonExtractDoubleArrow <$ string "->>" <* space <*> parser
     , toJsonExtractSingleArrow <$ string "->"  <* space <*> parser
+    , toStringConcatenation    <$ string "||"  <* space <*> parser
+    , toBitwiseShiftLeft       <$ string "<<"  <* space <*> parser
+    , toBitwiseShiftRight      <$ string ">>"  <* space <*> parser
+    , toLessThanOrEqualTo      <$ string "<="  <* space <*> parser
+    , toNotEquals              <$ string "<>"  <* space <*> parser
+    , toNotEquals              <$ string "!="  <* space <*> parser
+    , toGreaterThanOrEqualTo   <$ string ">="  <* space <*> parser
+    , toEquals                 <$ string "=="  <* space <*> parser
     , toMultiplication         <$ string "*"   <* space <*> parser
     , toDivision               <$ string "/"   <* space <*> parser
     , toModulus                <$ string "%"   <* space <*> parser
@@ -216,17 +223,20 @@ binaryRight =
     , toSubtraction            <$ string "-"   <* space <*> parser
     , toBitwiseAnd             <$ string "&"   <* space <*> parser
     , toBitwiseOr              <$ string "|"   <* space <*> parser
-    , toBitwiseShiftLeft       <$ string "<<"  <* space <*> parser
-    , toBitwiseShiftRight      <$ string ">>"  <* space <*> parser
-    , toLessThanOrEqualTo      <$ string "<="  <* space <*> parser
     , toLessThan               <$ string "<"   <* space <*> parser
-    , toGreaterThanOrEqualTo   <$ string ">="  <* space <*> parser
     , toGreaterThan            <$ string ">"   <* space <*> parser
+    , toEquals                 <$ string "="   <* space <*> parser
     ]
   where
-    toStringConcatenation rhs lhs    = Operator (StringConcatenation lhs rhs)
     toJsonExtractDoubleArrow rhs lhs = Operator (JsonExtractDoubleArrow lhs rhs)
     toJsonExtractSingleArrow rhs lhs = Operator (JsonExtractSingleArrow lhs rhs)
+    toStringConcatenation rhs lhs    = Operator (StringConcatenation lhs rhs)
+    toBitwiseShiftLeft rhs lhs       = Operator (BitwiseShiftLeft lhs rhs)
+    toBitwiseShiftRight rhs lhs      = Operator (BitwiseShiftRight lhs rhs)
+    toLessThanOrEqualTo rhs lhs      = Operator (LessThanOrEqualTo lhs rhs)
+    toNotEquals rhs lhs              = Operator (NotEquals lhs rhs)
+    toGreaterThanOrEqualTo rhs lhs   = Operator (GreaterThanOrEqualTo lhs rhs)
+    toEquals rhs lhs                 = Operator (Equals lhs rhs)
     toMultiplication rhs lhs         = Operator (Multiplication lhs rhs)
     toDivision rhs lhs               = Operator (Division lhs rhs)
     toModulus rhs lhs                = Operator (Modulus lhs rhs)
@@ -234,9 +244,5 @@ binaryRight =
     toSubtraction rhs lhs            = Operator (Subtraction lhs rhs)
     toBitwiseAnd rhs lhs             = Operator (BitwiseAnd lhs rhs)
     toBitwiseOr rhs lhs              = Operator (BitwiseOr lhs rhs)
-    toBitwiseShiftLeft rhs lhs       = Operator (BitwiseShiftLeft lhs rhs)
-    toBitwiseShiftRight rhs lhs      = Operator (BitwiseShiftRight lhs rhs)
     toLessThan rhs lhs               = Operator (LessThan lhs rhs)
-    toLessThanOrEqualTo rhs lhs      = Operator (LessThanOrEqualTo lhs rhs)
     toGreaterThan rhs lhs            = Operator (GreaterThan lhs rhs)
-    toGreaterThanOrEqualTo rhs lhs   = Operator (GreaterThanOrEqualTo lhs rhs)

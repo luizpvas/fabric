@@ -153,3 +153,19 @@ spec = do
     it "parses greater than or equal to" $ do
       assertParseSuccess parser "1 >= 2" $
         Operator (GreaterThanOrEqualTo (LiteralInt 1) (LiteralInt 2))
+
+    it "parses equals" $ do
+      assertParseSuccess parser "1 = 2" $ do
+        Operator (Equals (LiteralInt 1) (LiteralInt 2))
+
+    it "parses double equals" $ do
+      assertParseSuccess parser "1 == 2" $ do
+        Operator (Equals (LiteralInt 1) (LiteralInt 2))
+
+    it "parses not equals with <>" $ do
+      assertParseSuccess parser "1 <> 2" $ do
+        Operator (NotEquals (LiteralInt 1) (LiteralInt 2))
+
+    it "parses not equals with !=" $ do
+      assertParseSuccess parser "1 != 2" $ do
+        Operator (NotEquals (LiteralInt 1) (LiteralInt 2))
