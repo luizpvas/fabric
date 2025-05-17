@@ -1,4 +1,4 @@
-module Compiler.Parser.SQL (parser, Expression(..), Operator(..), BinaryOperator(..), TertiaryOperator(..)) where
+module Compiler.Parser.SQL (expression, Expression(..), Operator(..), BinaryOperator(..), TertiaryOperator(..)) where
 
 
 -- Here are some interesting queries I found while writing this parser:
@@ -12,6 +12,7 @@ module Compiler.Parser.SQL (parser, Expression(..), Operator(..), BinaryOperator
 import Data.Void
 import Text.Megaparsec
 import Text.Megaparsec.Char
+import qualified Control.Monad.Combinators.Expr as Expr
 import qualified Compiler.Parser.Name as Name
 import qualified Compiler.Parser.Number as Number
 import qualified Compiler.Parser.String as String
@@ -99,15 +100,18 @@ data TertiaryOperator
   deriving (Show, Eq)
 
 
-parser :: Parser Expression
-parser =
-  (\expr f -> f expr) <$> primary <* space <*> (unaryPostfix <|> binaryRight <|> pure id)
+expression :: Parser Expression
+expression =
+  wrap <$> primaryExpression <* space <*> (unaryPostfix <|> binaryRight <|> pure id)
+  where
+    wrap :: Expression -> (Expression -> Expression) -> Expression
+    wrap expr f = f expr
 
 
-primary :: Parser Expression
-primary =
+primaryExpression :: Parser Expression
+primaryExpression =
   choice
-    [ fmap Parenthesized (between (char '(') (char ')') parser)
+    [ fmap Parenthesized (between (char '(') (char ')') expression)
     , literalNumber
     , literalString
     , literalBlob
@@ -167,19 +171,28 @@ literalCurrent =
       ]
 
 
+operators :: [[Expr.Operator Parser Expression]]
+operators =
+  [ [ Expr.Prefix (Operator . BitwiseNot <$ char '~')
+    , Expr.Prefix (Operator . Plus <$ char '+')
+    , Expr.Prefix (Operator . Minus <$ char '-')
+    ]
+  ]
+
+
 unaryPrefixBitwiseNot :: Parser Expression
 unaryPrefixBitwiseNot =
-  Operator . BitwiseNot <$ char '~' <*> parser
+  Operator . BitwiseNot <$ char '~' <*> expression
 
 
 unaryPrefixPlus :: Parser Expression
 unaryPrefixPlus =
-  Operator . Plus <$ char '+' <*> parser
+  Operator . Plus <$ char '+' <*> expression
 
 
 unaryPrefixMinus :: Parser Expression
 unaryPrefixMinus =
-  Operator . Minus <$ char '-' <*> parser
+  Operator . Minus <$ char '-' <*> expression
 
 
 unaryPostfix :: Parser (Expression -> Expression)
@@ -198,9 +211,9 @@ unaryPostfixNot :: Parser (Expression -> Expression)
 unaryPostfixNot =
   choice
     [ toNotNull   <$ string' "null"
-    , toNotMatch  <$ string' "match"  <* space <*> parser
-    , toNotRegexp <$ string' "regexp" <* space <*> parser
-    , toNotGlob   <$ string' "glob"   <* space <*> parser
+    , toNotMatch  <$ string' "match"  <* space <*> expression
+    , toNotRegexp <$ string' "regexp" <* space <*> expression
+    , toNotGlob   <$ string' "glob"   <* space <*> expression
     ]
   where
     toNotNull           = Operator . NotNull
@@ -213,31 +226,31 @@ binaryRight :: Parser (Expression -> Expression)
 binaryRight =
   choice
     [ string' "is"  *> space *> binaryRightIs
-    , toAnd                    <$ string' "and"    <* space <*> parser
-    , toOr                     <$ string' "or"     <* space <*> parser
-    , toMatch                  <$ string' "match"  <* space <*> parser
-    , toRegexp                 <$ string' "regexp" <* space <*> parser
-    , toGlob                   <$ string' "glob"   <* space <*> parser
-    , toJsonExtractDoubleArrow <$ string "->>" <* space <*> parser
-    , toJsonExtractSingleArrow <$ string "->"  <* space <*> parser
-    , toStringConcatenation    <$ string "||"  <* space <*> parser
-    , toBitwiseShiftLeft       <$ string "<<"  <* space <*> parser
-    , toBitwiseShiftRight      <$ string ">>"  <* space <*> parser
-    , toLessThanOrEqualTo      <$ string "<="  <* space <*> parser
-    , toNotEquals              <$ string "<>"  <* space <*> parser
-    , toNotEquals              <$ string "!="  <* space <*> parser
-    , toGreaterThanOrEqualTo   <$ string ">="  <* space <*> parser
-    , toEquals                 <$ string "=="  <* space <*> parser
-    , toMultiplication         <$ string "*"   <* space <*> parser
-    , toDivision               <$ string "/"   <* space <*> parser
-    , toModulus                <$ string "%"   <* space <*> parser
-    , toSum                    <$ string "+"   <* space <*> parser
-    , toSubtraction            <$ string "-"   <* space <*> parser
-    , toBitwiseAnd             <$ string "&"   <* space <*> parser
-    , toBitwiseOr              <$ string "|"   <* space <*> parser
-    , toLessThan               <$ string "<"   <* space <*> parser
-    , toGreaterThan            <$ string ">"   <* space <*> parser
-    , toEquals                 <$ string "="   <* space <*> parser
+    , toAnd                    <$ string' "and"    <* space <*> expression
+    , toOr                     <$ string' "or"     <* space <*> expression
+    , toMatch                  <$ string' "match"  <* space <*> expression
+    , toRegexp                 <$ string' "regexp" <* space <*> expression
+    , toGlob                   <$ string' "glob"   <* space <*> expression
+    , toJsonExtractDoubleArrow <$ string "->>" <* space <*> expression
+    , toJsonExtractSingleArrow <$ string "->"  <* space <*> expression
+    , toStringConcatenation    <$ string "||"  <* space <*> expression
+    , toBitwiseShiftLeft       <$ string "<<"  <* space <*> expression
+    , toBitwiseShiftRight      <$ string ">>"  <* space <*> expression
+    , toLessThanOrEqualTo      <$ string "<="  <* space <*> expression
+    , toNotEquals              <$ string "<>"  <* space <*> expression
+    , toNotEquals              <$ string "!="  <* space <*> expression
+    , toGreaterThanOrEqualTo   <$ string ">="  <* space <*> expression
+    , toEquals                 <$ string "=="  <* space <*> expression
+    , toMultiplication         <$ string "*"   <* space <*> expression
+    , toDivision               <$ string "/"   <* space <*> expression
+    , toModulus                <$ string "%"   <* space <*> expression
+    , toSum                    <$ string "+"   <* space <*> expression
+    , toSubtraction            <$ string "-"   <* space <*> expression
+    , toBitwiseAnd             <$ string "&"   <* space <*> expression
+    , toBitwiseOr              <$ string "|"   <* space <*> expression
+    , toLessThan               <$ string "<"   <* space <*> expression
+    , toGreaterThan            <$ string ">"   <* space <*> expression
+    , toEquals                 <$ string "="   <* space <*> expression
     ]
   where
     toAnd rhs lhs                    = Operator (And lhs rhs)
@@ -269,8 +282,8 @@ binaryRightIs :: Parser (Expression -> Expression)
 binaryRightIs =
   choice
     [ string' "not" *> space *> binaryRightIsNot
-    , toIsDistinctFrom <$ string' "distinct" <* space1 <* string' "from" <* space <*> parser
-    , toIs <$> parser
+    , toIsDistinctFrom <$ string' "distinct" <* space1 <* string' "from" <* space <*> expression
+    , toIs <$> expression
     ]
   where
     toIsDistinctFrom rhs lhs = Operator (IsDistinctFrom lhs rhs)
@@ -280,8 +293,8 @@ binaryRightIs =
 binaryRightIsNot :: Parser (Expression -> Expression)
 binaryRightIsNot =
   choice
-    [ toIsNotDistinctFrom <$ string' "distinct" <* space1 <* string' "from" <* space <*> parser
-    , toIsNot <$> parser
+    [ toIsNotDistinctFrom <$ string' "distinct" <* space1 <* string' "from" <* space <*> expression
+    , toIsNot <$> expression
     ]
   where
     toIsNot rhs lhs = Operator (IsNot lhs rhs)

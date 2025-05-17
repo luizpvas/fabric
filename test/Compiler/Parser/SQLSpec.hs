@@ -10,220 +10,220 @@ spec :: Spec
 spec = do
   describe "literal" $ do
     it "parses literal positive integers" $ do
-      assertParseSuccess parser "10" $
+      assertParseSuccess expression "10" $
         LiteralInt 10
 
     it "parses literal hex numbers" $ do
-      assertParseSuccess parser "0xA" $
+      assertParseSuccess expression "0xA" $
         LiteralHex 10
 
     it "parses literal floats" $ do
-      assertParseSuccess parser "0.1" $
+      assertParseSuccess expression "0.1" $
         LiteralFloat 0.1
 
     it "parses literal strings" $ do
-      assertParseSuccess parser "'hello'" $
+      assertParseSuccess expression "'hello'" $
         LiteralString "hello"
 
     it "parses literal blobs prefixed with uppercase X" $ do
-      assertParseSuccess parser "X'53514C697465'" $
+      assertParseSuccess expression "X'53514C697465'" $
         LiteralBlob "53514C697465"
 
     it "parses literal blobs prefixed with lowercase x" $ do
-      assertParseSuccess parser "x'53514C697465'" $
+      assertParseSuccess expression "x'53514C697465'" $
         LiteralBlob "53514C697465"
 
     it "parses literal NULL" $ do
-      assertParseSuccess parser "NULL" LiteralNull
+      assertParseSuccess expression "NULL" LiteralNull
 
     it "parses literal TRUE" $ do
-      assertParseSuccess parser "TRUE" LiteralTrue
+      assertParseSuccess expression "TRUE" LiteralTrue
 
     it "parses literal FALSE" $ do
-      assertParseSuccess parser "FALSE" LiteralFalse
+      assertParseSuccess expression "FALSE" LiteralFalse
 
     it "parses literal CURRENT_TIME" $ do
-      assertParseSuccess parser "CURRENT_TIME" $
+      assertParseSuccess expression "CURRENT_TIME" $
         LiteralCurrentTime
 
     it "parses literal CURRENT_DATE" $ do
-      assertParseSuccess parser "CURRENT_DATE" $
+      assertParseSuccess expression "CURRENT_DATE" $
         LiteralCurrentDate
 
     it "parses literal CURRENT_TIMESTAMP" $ do
-      assertParseSuccess parser "CURRENT_TIMESTAMP" $
+      assertParseSuccess expression "CURRENT_TIMESTAMP" $
         LiteralCurrentTimestamp
 
   describe "unary prefix" $ do
     it "parses bitwise-not operator" $ do
-      assertParseSuccess parser "~1" $
+      assertParseSuccess expression "~1" $
         Operator (BitwiseNot (LiteralInt 1))
 
     it "parses plus operator on non-numbers" $ do
-      assertParseSuccess parser "+NULL" $
+      assertParseSuccess expression "+NULL" $
         Operator (Plus (LiteralNull))
 
     it "parses plus operator on numbers" $ do
-      assertParseSuccess parser "+1" $
+      assertParseSuccess expression "+1" $
         Operator (Plus (LiteralInt 1))
 
     it "parses minus operator" $ do
-      assertParseSuccess parser "-0.1" $
+      assertParseSuccess expression "-0.1" $
         Operator (Minus (LiteralFloat 0.1))
 
   describe "unary postfix" $ do
     it "parses COLLATE operator" $ do
-      assertParseSuccess parser "'hello' COLLATE NOCASE" $
+      assertParseSuccess expression "'hello' COLLATE NOCASE" $
         Operator (Collate "NOCASE" (LiteralString "hello"))
 
     it "parses ISNULL operator" $ do
-      assertParseSuccess parser "NULL ISNULL" $
+      assertParseSuccess expression "NULL ISNULL" $
         Operator (IsNull LiteralNull)
 
     it "parses NOTNULL operator" $ do
-      assertParseSuccess parser "NULL NOTNULL" $
+      assertParseSuccess expression "NULL NOTNULL" $
         Operator (NotNull LiteralNull)
 
     it "parses NOT NULL operator" $ do
-      assertParseSuccess parser "NULL NOT NULL" $
+      assertParseSuccess expression "NULL NOT NULL" $
         Operator (NotNull LiteralNull)
 
   describe "binary" $ do
     it "parses string concatenation" $ do
-      assertParseSuccess parser "'x' || 'y'" $
+      assertParseSuccess expression "'x' || 'y'" $
         Operator (StringConcatenation (LiteralString "x") (LiteralString "y"))
 
     it "parses JSON extract single arrow" $ do
-      assertParseSuccess parser "'{}'->'$'" $
+      assertParseSuccess expression "'{}'->'$'" $
         Operator (JsonExtractSingleArrow (LiteralString "{}") (LiteralString "$"))
 
     it "parses JSON extract double arrow" $ do
-      assertParseSuccess parser "'[0,1,2]'->>2" $
+      assertParseSuccess expression "'[0,1,2]'->>2" $
         Operator (JsonExtractDoubleArrow (LiteralString "[0,1,2]") (LiteralInt 2))
 
     it "parses multiplication" $ do
-      assertParseSuccess parser "1 * 2" $
+      assertParseSuccess expression "1 * 2" $
         Operator (Multiplication (LiteralInt 1) (LiteralInt 2))
 
     it "parses division" $ do
-      assertParseSuccess parser "1 / 2" $
+      assertParseSuccess expression "1 / 2" $
         Operator (Division (LiteralInt 1) (LiteralInt 2))
 
     it "parses modulus (reminder)" $ do
-      assertParseSuccess parser "1 % 2" $
+      assertParseSuccess expression "1 % 2" $
         Operator (Modulus (LiteralInt 1) (LiteralInt 2))
 
     it "parses sum" $ do
-      assertParseSuccess parser "1 + 2" $
+      assertParseSuccess expression "1 + 2" $
         Operator (Sum (LiteralInt 1) (LiteralInt 2))
 
     it "parses subtraction" $ do
-      assertParseSuccess parser "1 - 2" $
+      assertParseSuccess expression "1 - 2" $
         Operator (Subtraction (LiteralInt 1) (LiteralInt 2))
 
     it "parses bitwise and" $ do
-      assertParseSuccess parser "1 & 2" $
+      assertParseSuccess expression "1 & 2" $
         Operator (BitwiseAnd (LiteralInt 1) (LiteralInt 2))
 
     it "parses bitwise or" $ do
-      assertParseSuccess parser "1 | 2" $
+      assertParseSuccess expression "1 | 2" $
         Operator (BitwiseOr (LiteralInt 1) (LiteralInt 2))
 
     it "parses bitwise shift left" $ do
-      assertParseSuccess parser "1 << 2" $
+      assertParseSuccess expression "1 << 2" $
         Operator (BitwiseShiftLeft (LiteralInt 1) (LiteralInt 2))
 
     it "parses bitwise shift right" $ do
-      assertParseSuccess parser "1 >> 2" $
+      assertParseSuccess expression "1 >> 2" $
         Operator (BitwiseShiftRight (LiteralInt 1) (LiteralInt 2))
 
     it "parses less than" $ do
-      assertParseSuccess parser "1 < 2" $
+      assertParseSuccess expression "1 < 2" $
         Operator (LessThan (LiteralInt 1) (LiteralInt 2))
 
     it "parses less than or equal to" $ do
-      assertParseSuccess parser "1 <= 2" $
+      assertParseSuccess expression "1 <= 2" $
         Operator (LessThanOrEqualTo (LiteralInt 1) (LiteralInt 2))
 
     it "parses greater than" $ do
-      assertParseSuccess parser "1 > 2" $
+      assertParseSuccess expression "1 > 2" $
         Operator (GreaterThan (LiteralInt 1) (LiteralInt 2))
 
     it "parses greater than or equal to" $ do
-      assertParseSuccess parser "1 >= 2" $
+      assertParseSuccess expression "1 >= 2" $
         Operator (GreaterThanOrEqualTo (LiteralInt 1) (LiteralInt 2))
 
     it "parses equals" $ do
-      assertParseSuccess parser "1 = 2" $ do
+      assertParseSuccess expression "1 = 2" $ do
         Operator (Equals (LiteralInt 1) (LiteralInt 2))
 
     it "parses double equals" $ do
-      assertParseSuccess parser "1 == 2" $ do
+      assertParseSuccess expression "1 == 2" $ do
         Operator (Equals (LiteralInt 1) (LiteralInt 2))
 
     it "parses not equals with <>" $ do
-      assertParseSuccess parser "1 <> 2" $ do
+      assertParseSuccess expression "1 <> 2" $ do
         Operator (NotEquals (LiteralInt 1) (LiteralInt 2))
 
     it "parses not equals with !=" $ do
-      assertParseSuccess parser "1 != 2" $ do
+      assertParseSuccess expression "1 != 2" $ do
         Operator (NotEquals (LiteralInt 1) (LiteralInt 2))
 
     it "parses IS" $ do
-      assertParseSuccess parser "1 IS 2" $ do
+      assertParseSuccess expression "1 IS 2" $ do
         Operator (Is (LiteralInt 1) (LiteralInt 2))
 
     it "parses IS NOT" $ do
-      assertParseSuccess parser "1 IS NOT 2" $ do
+      assertParseSuccess expression "1 IS NOT 2" $ do
         Operator (IsNot (LiteralInt 1) (LiteralInt 2))
 
     it "parses IS DISTINCT FROM" $ do
-      assertParseSuccess parser "1 IS DISTINCT FROM 2" $ do
+      assertParseSuccess expression "1 IS DISTINCT FROM 2" $ do
         Operator (IsDistinctFrom (LiteralInt 1) (LiteralInt 2))
 
     it "parses IS NOT DISTINCT FROM" $ do
-      assertParseSuccess parser "1 IS NOT DISTINCT FROM 2" $ do
+      assertParseSuccess expression "1 IS NOT DISTINCT FROM 2" $ do
         Operator (IsNotDistinctFrom (LiteralInt 1) (LiteralInt 2))
 
     it "parses AND" $ do
-      assertParseSuccess parser "1 AND 2" $
+      assertParseSuccess expression "1 AND 2" $
         Operator (And (LiteralInt 1) (LiteralInt 2))
 
     it "parses MATCH" $ do
-      assertParseSuccess parser "1 MATCH 2" $
+      assertParseSuccess expression "1 MATCH 2" $
         Operator (Match (LiteralInt 1) (LiteralInt 2))
 
     it "parses NOT MATCH" $ do
-      assertParseSuccess parser "1 NOT MATCH 2" $
+      assertParseSuccess expression "1 NOT MATCH 2" $
         Operator (NotMatch (LiteralInt 1) (LiteralInt 2))
 
     it "parses REGEXP" $ do
-      assertParseSuccess parser "'12' REGEXP '\\d'" $
+      assertParseSuccess expression "'12' REGEXP '\\d'" $
         Operator (Regexp (LiteralString "12") (LiteralString "\\d"))
 
     it "parses NOT REGEXP" $ do
-      assertParseSuccess parser "'12' NOT REGEXP '\\d'" $
+      assertParseSuccess expression "'12' NOT REGEXP '\\d'" $
         Operator (NotRegexp (LiteralString "12") (LiteralString "\\d"))
 
     it "parses GLOB" $ do
-      assertParseSuccess parser "'x' GLOB 'y'" $
+      assertParseSuccess expression "'x' GLOB 'y'" $
         Operator (Glob (LiteralString "x") (LiteralString "y"))
 
     it "parses NOT GLOB" $ do
-      assertParseSuccess parser "'x' NOT GLOB 'y'" $
+      assertParseSuccess expression "'x' NOT GLOB 'y'" $
         Operator (NotGlob (LiteralString "x") (LiteralString "y"))
 
   describe "parenthesized" $ do
     it "parses parenthesized expressions" $ do
-      assertParseSuccess parser "(1)" $
+      assertParseSuccess expression "(1)" $
         Parenthesized (LiteralInt 1)
 
     it "parses deeply parenthesized expressions" $ do
-      assertParseSuccess parser "(((NULL)))" $
+      assertParseSuccess expression "(((NULL)))" $
         Parenthesized (Parenthesized (Parenthesized LiteralNull))
 
     it "parses parenthesized subexpressions" $ do
-      assertParseSuccess parser "((1*2)+(3*4))" $
+      assertParseSuccess expression "((1*2)+(3*4))" $
         Parenthesized (
           Operator (
             Sum
@@ -231,3 +231,33 @@ spec = do
               (Parenthesized (Operator (Multiplication (LiteralInt 3) (LiteralInt 4))))
           )
         )
+
+--  describe "precedence" $ do
+--    it "~ ~" $ do assertParseSQLExpression "~~2" "(~(~2))"
+--    it "~ +" $ do assertParseSQLExpression "~+2" "(~(+2))"
+--    it "~ -" $ do assertParseSQLExpression "~-2" "(~(-2))"
+--    it "~ COLLATE" $ do assertParseSQLExpression "~2 COLLATE NOCASE" "((~2) COLLATE NOCASE)"
+--    it "~ ||" $ do assertParseSQLExpression "~2 || 'hello'" "((~2) || 'hello')"
+--    it "~ ->" $ do assertParseSQLExpression "~2->'hello'" "((~2)->'hello')"
+--    it "~ ->>" $ do assertParseSQLExpression "~2->>'hello'" "((~2)->>'hello')"
+--    it "~ *" $ do assertParseSQLExpression "~2 * 3" "((~2) * 3)"
+--    it "~ /" $ do assertParseSQLExpression "~2 / 3" "((~2) / 3)"
+--    it "~ %" $ do assertParseSQLExpression "~2 % 3" "((~2) % 3)"
+--    it "~ +" $ do assertParseSQLExpression "~2 + 3" "((~2) + 3)"
+--    it "~ -" $ do assertParseSQLExpression "~2 + 3" "((~2) - 3)"
+--    it "~ &" $ do assertParseSQLExpression "~2 & 3" "((~2) & 3)"
+--    it "~ |" $ do assertParseSQLExpression "~2 | 3" "((~2) | 3)"
+--    it "~ <<" $ do assertParseSQLExpression "~2 << 3" "((~2) << 3)"
+--    it "~ >>" $ do assertParseSQLExpression "~2 >> 3" "((~2) >> 3)"
+--    it "~ <" $ do assertParseSQLExpression "~2 < 3" "((~2) < 3)"
+--    it "~ >" $ do assertParseSQLExpression "~2 > 3" "((~2) > 3)"
+--    it "~ <=" $ do assertParseSQLExpression "~2 <= 3" "((~2) <= 3)"
+--    it "~ >=" $ do assertParseSQLExpression "~2 <= 3" "((~2) >= 3)"
+--    it "~ =" $ do assertParseSQLExpression "~2 = 3" "((~2) = 3)"
+--    it "~ <>" $ do assertParseSQLExpression "~2 <> 3" "((~2) <> 3)"
+--    it "~ IS" $ do assertParseSQLExpression "~2 IS 3" "((~2) IS 3)"
+--    it "~ IS NOT" $ do assertParseSQLExpression "~2 IS NOT 3" "((~2) IS NOT 3)"
+--    it "~ IS DISTINCT FROM" $ do assertParseSQLExpression "~2 IS DISTINCT FROM 3" "((~2) IS DISTINCT FROM 3)"
+--    it "~ IS NOT DISTINCT FROM" $ do assertParseSQLExpression "~2 IS NOT DISTINCT FROM 3" "((~2) IS NOT DISTINCT FROM 3)"
+--    it "~ AND" $ do assertParseSQLExpression "~2 AND 3" "((~2) AND 3)"
+--    it "~ OR" $ do assertParseSQLExpression "~2 OR 3" "((~2) OR 3)"

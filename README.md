@@ -12,6 +12,7 @@
 * Built to last
   - Easy to change
   - Can't forget to handle errors
+  - It's machine verified
 
 
 ### Programming style
