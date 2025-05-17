@@ -14,6 +14,13 @@
   - Can't forget to handle errors
 
 
+### Programming style
+
+* Fabric programs should consist mostly of functions that read, transform and
+  store database records.
+* Create new types when you need to teach the compiler about a constraint of
+  your domain.
+
 ### Writing style
 
 * When writing function documentation, imagine you are continueing the sentence
