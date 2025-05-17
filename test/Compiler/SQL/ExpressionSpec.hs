@@ -9,7 +9,7 @@ import Test.Hspec
 
 spec :: Spec
 spec = do
-  describe "expr" $ do
+  describe "literal" $ do
     it "parses a literal positive integer" $ do
       assertParseSuccess Expression.parser "10" (Expression.LiteralInt 10)
 
@@ -30,4 +30,10 @@ spec = do
 
     it "parses literal null" $ do
       assertParseSuccess Expression.parser "NULL" Expression.LiteralNull
+
+    it "parses literal TRUE" $ do
+      assertParseSuccess Expression.parser "TRUE" Expression.LiteralTrue
+
+    it "parses literal FALSE" $ do
+      assertParseSuccess Expression.parser "FALSE" Expression.LiteralFalse
 

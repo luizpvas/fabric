@@ -97,6 +97,8 @@ parser =
     , literalString
     , literalBlob
     , literalNull
+    , literalTrue
+    , literalFalse
     ]
 
 
@@ -122,3 +124,13 @@ literalBlob =
 literalNull :: Parser Expression
 literalNull =
   LiteralNull <$ (string' "null")
+
+
+literalTrue :: Parser Expression
+literalTrue =
+  LiteralTrue <$ (string' "true")
+
+
+literalFalse :: Parser Expression
+literalFalse =
+  LiteralFalse <$ (string' "false")
