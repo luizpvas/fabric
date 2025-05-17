@@ -4,6 +4,7 @@ module Compiler.SQL.Expression (parser, Expression(..), Operator(..), BinaryOper
 -- Here are some funny queries I found along the way. Can you guess their result?
 -- SELECT +++++++++++1;
 -- SELECT ~~~~~~~~~~~1;
+-- SELECT 'HELLO ' COLLATE RTRIM = 'HELLO';
 
 
 import Data.Void
@@ -110,21 +111,10 @@ primary =
     , literalTrue
     , literalFalse
     , literalCurrent
-    , unaryBitwiseNot
-    , unaryPlus
-    , unaryMinus
+    , unaryPrefixBitwiseNot
+    , unaryPrefixPlus
+    , unaryPrefixMinus
     ]
-
-
-unaryPostfix :: Parser (Expression -> Expression)
-unaryPostfix =
-  choice
-    [ toCollate "NOCASE" <$ string' "collate"
-    , pure id
-    ]
-  where
-    toCollate collationName expr =
-      Operator (Collate collationName expr)
 
 
 literalNumber :: Parser Expression
@@ -173,16 +163,27 @@ literalCurrent =
       ]
 
 
-unaryBitwiseNot :: Parser Expression
-unaryBitwiseNot =
+unaryPrefixBitwiseNot :: Parser Expression
+unaryPrefixBitwiseNot =
   Operator . BitwiseNot <$ char '~' <*> parser
 
 
-unaryPlus :: Parser Expression
-unaryPlus =
+unaryPrefixPlus :: Parser Expression
+unaryPrefixPlus =
   Operator . Plus <$ char '+' <*> parser
 
 
-unaryMinus :: Parser Expression
-unaryMinus =
+unaryPrefixMinus :: Parser Expression
+unaryPrefixMinus =
   Operator . Minus <$ char '-' <*> parser
+
+
+unaryPostfix :: Parser (Expression -> Expression)
+unaryPostfix =
+  choice
+    [ toCollate "NOCASE" <$ string' "collate"
+    , pure id
+    ]
+  where
+    toCollate collationName expr =
+      Operator (Collate collationName expr)
