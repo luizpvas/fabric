@@ -212,3 +212,22 @@ spec = do
     it "parses NOT GLOB" $ do
       assertParseSuccess parser "'x' NOT GLOB 'y'" $
         Operator (NotGlob (LiteralString "x") (LiteralString "y"))
+
+  describe "parenthesized" $ do
+    it "parses parenthesized expressions" $ do
+      assertParseSuccess parser "(1)" $
+        Parenthesized (LiteralInt 1)
+
+    it "parses deeply parenthesized expressions" $ do
+      assertParseSuccess parser "(((NULL)))" $
+        Parenthesized (Parenthesized (Parenthesized LiteralNull))
+
+    it "parses parenthesized subexpressions" $ do
+      assertParseSuccess parser "((1*2)+(3*4))" $
+        Parenthesized (
+          Operator (
+            Sum
+              (Parenthesized (Operator (Multiplication (LiteralInt 1) (LiteralInt 2))))
+              (Parenthesized (Operator (Multiplication (LiteralInt 3) (LiteralInt 4))))
+          )
+        )

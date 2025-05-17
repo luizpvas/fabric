@@ -27,7 +27,9 @@ type Parser = Parsec Void String
 
 
 data Expression
-  = LiteralInt Int
+  = Parenthesized Expression
+  | Operator Operator
+  | LiteralInt Int
   | LiteralHex Int
   | LiteralFloat Float
   | LiteralString String
@@ -38,7 +40,6 @@ data Expression
   | LiteralCurrentTime
   | LiteralCurrentDate
   | LiteralCurrentTimestamp
-  | Operator Operator
   deriving (Show, Eq)
 
 
@@ -106,7 +107,8 @@ parser =
 primary :: Parser Expression
 primary =
   choice
-    [ literalNumber
+    [ fmap Parenthesized (between (char '(') (char ')') parser)
+    , literalNumber
     , literalString
     , literalBlob
     , literalNull
