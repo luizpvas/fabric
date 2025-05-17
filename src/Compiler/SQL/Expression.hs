@@ -96,6 +96,7 @@ parser =
     [ literalNumber
     , literalString
     , literalBlob
+    , literalNull
     ]
 
 
@@ -116,3 +117,8 @@ literalString =
 literalBlob :: Parser Expression
 literalBlob =
   LiteralBlob <$ char' 'x' <* char '\'' <*> many hexDigitChar <* char '\''
+
+
+literalNull :: Parser Expression
+literalNull =
+  LiteralNull <$ (string' "null")

@@ -27,3 +27,7 @@ spec = do
 
     it "parses a literal blob prefixed with lowercase x" $ do
       assertParseSuccess Expression.parser "x'53514C697465'" (Expression.LiteralBlob "53514C697465")
+
+    it "parses literal null" $ do
+      assertParseSuccess Expression.parser "NULL" Expression.LiteralNull
+
