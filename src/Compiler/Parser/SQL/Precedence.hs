@@ -10,6 +10,7 @@ fix uninteresting = uninteresting
 
 
 f :: Operator -> Operator
+-- ~
 f (BitwiseNot (Operator (Collate n e)))                = Collate n (Operator (BitwiseNot e))
 f (BitwiseNot (Operator (StringConcatenation l r)))    = StringConcatenation (Operator (BitwiseNot l)) r
 f (BitwiseNot (Operator (JsonExtractSingleArrow l r))) = JsonExtractSingleArrow (Operator (BitwiseNot l)) r

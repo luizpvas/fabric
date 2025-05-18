@@ -1,7 +1,7 @@
 module Compiler.Parser.Assertion
   ( assertParseSuccess
   , assertParseProblem
-  , assertParseSQLExpression
+  , assertSQLExpressionParenthesized
   ) where
 
 
@@ -26,8 +26,8 @@ assertParseProblem parser sourceCode expectedErrorMessage =
     Right val -> fail "expected parser to fail"
 
 
-assertParseSQLExpression :: String -> String -> IO ()
-assertParseSQLExpression sourceCode parenthesized =
+assertSQLExpressionParenthesized :: String -> String -> IO ()
+assertSQLExpressionParenthesized sourceCode parenthesized =
   case parse Compiler.Parser.SQL.expression "" sourceCode of
     Left err -> fail $ errorBundlePretty err
     Right val -> Formatter.SQL.formatExpressionWithExplicitParenthesis val `shouldBe` parenthesized
