@@ -6,8 +6,8 @@ import Compiler.Parser.Assertion
 
 
 spec :: Spec
-spec =
-  describe "~" $ do
+spec = do
+  describe "~expr" $ do
     it "~"                    $ do assertSQLExpressionParenthesized "~~2" "(~(~2))"
     it "+"                    $ do assertSQLExpressionParenthesized "~+2" "(~(+2))"
     it "-"                    $ do assertSQLExpressionParenthesized "~-2" "(~(-2))"
@@ -36,3 +36,32 @@ spec =
     it "IS NOT DISTINCT FROM" $ do assertSQLExpressionParenthesized "~2 IS NOT DISTINCT FROM 3" "((~2) IS NOT DISTINCT FROM 3)"
     it "AND"                  $ do assertSQLExpressionParenthesized "~2 AND 3" "((~2) AND 3)"
     it "OR"                   $ do assertSQLExpressionParenthesized "~2 OR 3" "((~2) OR 3)"
+  describe "+expr" $ do
+    it "~"                    $ do assertSQLExpressionParenthesized "+~2" "(+(~2))"
+    it "+"                    $ do assertSQLExpressionParenthesized "++2" "(+(+2))"
+    it "-"                    $ do assertSQLExpressionParenthesized "+-2" "(+(-2))"
+    it "COLLATE"              $ do assertSQLExpressionParenthesized "+2 COLLATE NOCASE" "((+2) COLLATE NOCASE)"
+    it "||"                   $ do assertSQLExpressionParenthesized "+2 || 'hello'" "((+2) || 'hello')"
+    it "->"                   $ do assertSQLExpressionParenthesized "+2->'hello'" "((+2)->'hello')"
+    it "->>"                  $ do assertSQLExpressionParenthesized "+2->>'hello'" "((+2)->>'hello')"
+    it "*"                    $ do assertSQLExpressionParenthesized "+2 * 3" "((+2) * 3)"
+    it "/"                    $ do assertSQLExpressionParenthesized "+2 / 3" "((+2) / 3)"
+    it "%"                    $ do assertSQLExpressionParenthesized "+2 % 3" "((+2) % 3)"
+    it "+"                    $ do assertSQLExpressionParenthesized "+2 + 3" "((+2) + 3)"
+    it "-"                    $ do assertSQLExpressionParenthesized "+2 - 3" "((+2) - 3)"
+    it "&"                    $ do assertSQLExpressionParenthesized "+2 & 3" "((+2) & 3)"
+    it "|"                    $ do assertSQLExpressionParenthesized "+2 | 3" "((+2) | 3)"
+    it "<<"                   $ do assertSQLExpressionParenthesized "+2 << 3" "((+2) << 3)"
+    it ">>"                   $ do assertSQLExpressionParenthesized "+2 >> 3" "((+2) >> 3)"
+    it "<"                    $ do assertSQLExpressionParenthesized "+2 < 3" "((+2) < 3)"
+    it ">"                    $ do assertSQLExpressionParenthesized "+2 > 3" "((+2) > 3)"
+    it "<="                   $ do assertSQLExpressionParenthesized "+2 <= 3" "((+2) <= 3)"
+    it ">="                   $ do assertSQLExpressionParenthesized "+2 >= 3" "((+2) >= 3)"
+    it "="                    $ do assertSQLExpressionParenthesized "+2 = 3" "((+2) = 3)"
+    it "<>"                   $ do assertSQLExpressionParenthesized "+2 <> 3" "((+2) <> 3)"
+    it "IS"                   $ do assertSQLExpressionParenthesized "+2 IS 3" "((+2) IS 3)"
+    it "IS NOT"               $ do assertSQLExpressionParenthesized "+2 IS NOT 3" "((+2) IS NOT 3)"
+    it "IS DISTINCT FROM"     $ do assertSQLExpressionParenthesized "+2 IS DISTINCT FROM 3" "((+2) IS DISTINCT FROM 3)"
+    it "IS NOT DISTINCT FROM" $ do assertSQLExpressionParenthesized "+2 IS NOT DISTINCT FROM 3" "((+2) IS NOT DISTINCT FROM 3)"
+    it "AND"                  $ do assertSQLExpressionParenthesized "+2 AND 3" "((+2) AND 3)"
+    it "OR"                   $ do assertSQLExpressionParenthesized "+2 OR 3" "((+2) OR 3)"
