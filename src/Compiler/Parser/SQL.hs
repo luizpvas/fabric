@@ -10,6 +10,20 @@ module Compiler.Parser.SQL
 -- SELECT 'HELLO ' COLLATE RTRIM = 'HELLO'
 -- SELECT NOT NULL NOTNULL IS NOT NULL
 
+-- expression
+-- primaryExpression
+-- unaryPrefixBitwiseNot
+-- $1 !! Operator . BitwiseNot !! expression
+--   literalNumber(2)
+--   space
+--   binaryRight
+--   $2 !! toSum (rhs = 2) !! expression
+--     literalNumber(3)
+--     space
+--     eof
+--   $2 !! toSum (rhs=2) (lhs=3)
+-- $1 !! Operator . BitwiseNot (sum)
+
 
 import Data.Void
 import Text.Megaparsec
@@ -29,14 +43,14 @@ type Parser = Parsec Void String
 
 expression :: Parser Expression
 expression =
-  wrap <$> primaryExpression <* space <*> (unaryPostfix <|> binaryRight <|> pure id)
+  wrap <$> term <* space <*> (unaryPostfix <|> binaryRight <|> pure id)
   where
     wrap :: Expression -> (Expression -> Expression) -> Expression
     wrap expr f = Precedence.fix (f expr)
 
 
-primaryExpression :: Parser Expression
-primaryExpression =
+term :: Parser Expression
+term =
   choice
     [ fmap Parenthesized (between (char '(') (char ')') expression)
     , literalNumber
