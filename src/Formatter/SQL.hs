@@ -1,6 +1,9 @@
 module Formatter.SQL (formatExpressionWithExplicitParenthesis) where
 
+
 import Compiler.Parser.SQL
+import Compiler.Parser.SQL.AST
+
 
 formatExpressionWithExplicitParenthesis :: Expression -> String
 formatExpressionWithExplicitParenthesis = f
