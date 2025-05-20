@@ -26,13 +26,13 @@ module Compiler.Parser.SQL
 
 
 import Data.Void
+import Debug.Trace
 import Text.Megaparsec
 import Text.Megaparsec.Char
 import Compiler.Parser.SQL.AST
 import qualified Compiler.Parser.Name as Name
 import qualified Compiler.Parser.Number as Number
 import qualified Compiler.Parser.String as String
-import qualified Compiler.Parser.SQL.Precedence as Precedence
 
 
 -- PARSER
@@ -42,27 +42,23 @@ type Parser = Parsec Void String
 
 
 expression :: Parser Expression
-expression =
-  wrap <$> term <* space <*> (unaryPostfix <|> binaryRight <|> pure id)
-  where
-    wrap :: Expression -> (Expression -> Expression) -> Expression
-    wrap expr f = Precedence.fix (f expr)
+expression = precedence4
 
 
-term :: Parser Expression
-term =
+-- PRIMARY: PRECEDENCE 0
+
+
+primary :: Parser Expression
+primary =
   choice
-    [ fmap Parenthesized (between (char '(') (char ')') expression)
-    , literalNumber
+    [ literalNumber
     , literalString
     , literalBlob
     , literalNull
     , literalTrue
     , literalFalse
     , literalCurrent
-    , unaryPrefixBitwiseNot
-    , unaryPrefixPlus
-    , unaryPrefixMinus
+    , fmap Parenthesized (between (char '(') (char ')') expression)
     ]
 
 
@@ -112,19 +108,76 @@ literalCurrent =
       ]
 
 
-unaryPrefixBitwiseNot :: Parser Expression
-unaryPrefixBitwiseNot =
-  Operator . BitwiseNot <$ char '~' <*> expression
+-- PRECEDENCE 1
+-- ~[expr]
+-- +[expr]
+-- -[expr]
 
 
-unaryPrefixPlus :: Parser Expression
-unaryPrefixPlus =
-  Operator . Plus <$ char '+' <*> expression
+precedence1 :: Parser Expression
+precedence1 =
+  choice
+    [ Operator . BitwiseNot <$ char '~' <*> precedence1 <* space
+    , Operator . Plus       <$ char '+' <*> precedence1 <* space
+    , Operator . Minus      <$ char '-' <*> precedence1 <* space
+    , primary <* space
+    ]
 
 
-unaryPrefixMinus :: Parser Expression
-unaryPrefixMinus =
-  Operator . Minus <$ char '-' <*> expression
+-- PRECEDENCE 2
+-- [expr] COLLATE (collation-name)
+
+
+precedence2 :: Parser Expression
+precedence2 = do
+  (\e f -> f e) <$> precedence1 <*> (collate <|> pure id)
+  where
+    collate :: Parser (Expression -> Expression)
+    collate =
+      (\n e -> Operator (Collate n e)) <$ string' "collate" <* space1 <*> Name.variable <* space
+
+
+-- PRECEDENCE 3
+-- [expr] || [expr]
+-- [expr] -> [expr]
+-- [expr] ->> [expr]
+
+
+precedence3 :: Parser Expression
+precedence3 = do
+  left  <- precedence2
+  pairs <- many ((,) <$> operator <*> precedence2)
+  return $ foldl (\l (op, r) -> Operator (op l r)) left pairs
+  where
+    operator :: Parser (Expression -> Expression -> Operator)
+    operator = choice
+      [ StringConcatenation    <$ string "||"  <* space
+      , JsonExtractDoubleArrow <$ string "->>" <* space
+      , JsonExtractSingleArrow <$ string "->"  <* space
+      ]
+
+
+-- PRECEDENCE 4
+-- [expr] * [expr]
+-- [expr] / [expr]
+-- [expr] % [expr]
+
+
+precedence4 :: Parser Expression
+precedence4 = do
+  left <- precedence3
+  pairs <- many ((,) <$> operator <*> precedence3)
+  return $ foldl (\l (op, r) -> Operator (op l r)) left pairs
+  where
+    operator :: Parser (Expression -> Expression -> Operator)
+    operator = choice
+      [ Multiplication <$ string "*"  <* space
+      , Division       <$ string "/" <* space
+      , Modulus        <$ string "%"  <* space
+      ]
+
+
+-- REST
 
 
 unaryPostfix :: Parser (Expression -> Expression)
