@@ -42,7 +42,7 @@ type Parser = Parsec Void String
 
 
 expression :: Parser Expression
-expression = precedence4
+expression = precedence5
 
 
 -- PRIMARY: PRECEDENCE 0
@@ -171,9 +171,27 @@ precedence4 = do
   where
     operator :: Parser (Expression -> Expression -> Operator)
     operator = choice
-      [ Multiplication <$ string "*"  <* space
+      [ Multiplication <$ string "*" <* space
       , Division       <$ string "/" <* space
-      , Modulus        <$ string "%"  <* space
+      , Modulus        <$ string "%" <* space
+      ]
+
+
+-- PRECEDENCE 5
+-- [expr] + [expr]
+-- [expr] - [expr]
+
+
+precedence5 :: Parser Expression
+precedence5 = do
+  left <- precedence4
+  pairs <- many ((,) <$> operator <*> precedence4)
+  return $ foldl (\l (op, r) -> Operator (op l r)) left pairs
+  where
+    operator :: Parser (Expression -> Expression -> Operator)
+    operator = choice
+      [ Sum         <$ string "+" <* space
+      , Subtraction <$ string "-" <* space
       ]
 
 
