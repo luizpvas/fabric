@@ -15,6 +15,7 @@ formatExpressionWithExplicitParenthesis = f
         (BitwiseNot e)               -> "(" ++ "~" ++ f e ++ ")"
         (Plus e)                     -> "(" ++ "+" ++ f e ++ ")"
         (Minus e)                    -> "(" ++ "-" ++ f e ++ ")"
+        (Not e)                      -> "(NOT " ++ f e ++ ")"
         (Collate name e)             -> "(" ++ f e ++ " COLLATE " ++ name ++ ")"
         (IsNull e)                   -> "(" ++ f e ++ " ISNULL)"
         (NotNull e)                  -> "(" ++ f e ++ " NOT NULL)"
@@ -48,6 +49,10 @@ formatExpressionWithExplicitParenthesis = f
         (NotRegexp l r)              -> "(" ++ f l ++ " NOT REGEXP " ++ f r ++ ")"
         (Glob l r)                   -> "(" ++ f l ++ " GLOB " ++ f r ++ ")"
         (NotGlob l r)                -> "(" ++ f l ++ " NOT GLOB " ++ f r ++ ")"
+        (Like l r e)                 -> "(" ++ f l ++ " LIKE " ++ f r ++ formatEscape e ++ ")"
+        (NotLike l r e)              -> "(" ++ f l ++ " NOT LIKE " ++ f r ++ formatEscape e ++ ")"
+        (Between l m r)              -> "(" ++ f l ++ " BETWEEN " ++ f m ++ " AND " ++ f r ++ ")"
+        (NotBetween l m r)           -> "(" ++ f l ++ " NOT BETWEEN " ++ f m ++ " AND " ++ f r ++ ")"
         (LiteralInt i)               -> show i
         (LiteralHex h)               -> show h
         (LiteralFloat f')            -> show f'
@@ -59,3 +64,8 @@ formatExpressionWithExplicitParenthesis = f
         LiteralCurrentTime           -> "CURRENT_TIME"
         LiteralCurrentDate           -> "CURRENT_DATE"
         LiteralCurrentTimestamp      -> "CURRENT_TIMESTAMP"
+
+
+formatEscape :: EscapeClause -> String
+formatEscape (NoEscape) = ""
+formatEscape (Escape e) = " ESCAPE " ++ formatExpressionWithExplicitParenthesis e

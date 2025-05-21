@@ -254,3 +254,20 @@ spec = do
             (Parenthesized (Multiplication (LiteralInt 1) (LiteralInt 2)))
             (Parenthesized (Multiplication (LiteralInt 3) (LiteralInt 4)))
         )
+
+  describe "precedence" $ do
+    it "parses math expressions" $ do
+      assertSQLExpressionParenthesized "1 + 2 * 3 > 5" "((1 + (2 * 3)) > 5)"
+
+    it "parses conditionals with AND and OR" $ do
+      assertSQLExpressionParenthesized "1=1 AND 2=2 OR 3=3" "(((1 = 1) AND (2 = 2)) OR (3 = 3))"
+
+    it "parses multiple unary ~ prefixes" $ do
+      assertSQLExpressionParenthesized "~~~3" "(~(~(~3)))"
+
+    it "parses multiple unary NOT prefixes" $ do
+      assertSQLExpressionParenthesized "NOT NOT NOT 3" "(NOT (NOT (NOT 3)))"
+
+    it "parses like with escape" $ do
+      assertSQLExpressionParenthesized "1 LIKE 2 ESCAPE 1 LIKE 2" $
+        "((1 LIKE 2 ESCAPE 1) LIKE 2)"
