@@ -12,7 +12,6 @@ module Compiler.Parser.SQL
 
 
 import Data.Void
-import Debug.Trace
 import Text.Megaparsec
 import Text.Megaparsec.Char
 import Compiler.Parser.SQL.AST
@@ -34,8 +33,8 @@ expression = precedence11
 -- PRIMARY: PRECEDENCE 0
 
 
-primary :: Parser Expression
-primary =
+precedence0 :: Parser Expression
+precedence0 =
   choice
     [ literalNumber
     , literalString
@@ -106,7 +105,7 @@ precedence1 =
     [ BitwiseNot <$ char '~' <*> precedence1 <* space
     , Plus       <$ char '+' <*> precedence1 <* space
     , Minus      <$ char '-' <*> precedence1 <* space
-    , primary <* space
+    , precedence0 <* space
     ]
 
 
@@ -259,9 +258,9 @@ precedence8 = do
 
 
 data Precedence9
-  = Unary (Expression -> Expression)
-  | Binary (Expression -> Expression -> Expression) Expression
-  -- | Ternary Expression Expression (Expression -> Expression -> Expression -> Expression)
+  = NextUnary   (Expression -> Expression)
+  | NextBinary  (Expression -> Expression -> Expression) Expression
+  | NextLike    (Expression -> Expression -> EscapeClause -> Expression) Expression EscapeClause
 
 
 precedence9 :: Parser Expression
@@ -271,16 +270,19 @@ precedence9 = do
   return $ foldl eval left nexts
   where
     eval :: Expression -> Precedence9 -> Expression
-    eval expr next =
+    eval left next =
       case next of
-        Unary toExpr -> toExpr expr
-        Binary toExpr right -> toExpr expr right
+        NextUnary toExpr -> toExpr left
+        NextBinary toExpr right -> toExpr left right
+        NextLike toExpr right escape -> toExpr left right escape
 
     next :: Parser Precedence9
     next =
       choice
-        [ Unary <$> unary
-        , Binary <$> binary <*> precedence8
+        [ NextUnary <$> unary
+        , NextLike <$> like <*> precedence8 <*> escape
+        , try (NextLike <$> notLike <*> precedence8 <*> escape)
+        , NextBinary <$> binary <*> precedence8
         ]
 
     unary :: Parser (Expression -> Expression)
@@ -293,6 +295,19 @@ precedence9 = do
         , try (NotNull <$ string' "not" <* space <* string' "null")
         ]
 
+    like :: Parser (Expression -> Expression -> EscapeClause -> Expression)
+    like = Like <$ string' "like" <* space1
+
+    notLike :: Parser (Expression -> Expression -> EscapeClause -> Expression)
+    notLike = NotLike <$ string' "not" <* space1 <* string' "like" <* space1
+
+    escape :: Parser EscapeClause
+    escape =
+      choice
+        [ Escape <$ string' "escape" <* space1 <*> precedence8
+        , pure NoEscape
+        ]
+
     binary :: Parser (Expression -> Expression -> Expression)
     binary = choice
       [ Equals <$ string "==" <* space
@@ -302,7 +317,6 @@ precedence9 = do
       , Glob <$ string' "glob" <* space
       , Regexp <$ string' "regexp" <* space
       , Match <$ string' "match" <* space
-      , Like <$ string' "like" <* space
       , string' "is" *> space1 *> binaryIs
       , string' "not" *> space1 *> binaryNot
       ]
@@ -325,7 +339,6 @@ precedence9 = do
       [ NotGlob <$ string' "glob" <* space
       , NotRegexp <$ string' "regexp" <* space
       , NotMatch <$ string' "match" <* space
-      , NotLike <$ string' "like" <* space
       ]
 
 

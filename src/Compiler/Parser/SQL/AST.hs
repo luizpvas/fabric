@@ -1,4 +1,4 @@
-module Compiler.Parser.SQL.AST (Expression(..)) where
+module Compiler.Parser.SQL.AST (Expression(..), EscapeClause(..)) where
 
 
 data Expression
@@ -55,11 +55,18 @@ data Expression
   | NotRegexp Expression Expression
   | Glob Expression Expression
   | NotGlob Expression Expression
-  | Like Expression Expression -- TODO: handle ESCAPE
-  | NotLike Expression Expression
+  | Like Expression Expression EscapeClause
+  | NotLike Expression Expression EscapeClause
   | In Expression Expression
   | NotIn Expression Expression
   deriving (Show, Eq)
+
+
+data EscapeClause
+  = NoEscape
+  | Escape Expression
+  deriving (Show, Eq)
+
 
 -- data BinaryOperator
 --   deriving (Show, Eq)

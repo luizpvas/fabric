@@ -210,6 +210,22 @@ spec = do
       assertParseSuccess expression "'x' NOT GLOB 'y'" $
         NotGlob (LiteralString "x") (LiteralString "y")
 
+    it "parses LIKE" $ do
+      assertParseSuccess expression "'x' LIKE 'y'" $
+        Like (LiteralString "x") (LiteralString "y") NoEscape
+
+    it "parses LIKE with ESCAPE" $ do
+      assertParseSuccess expression "'x' LIKE 'y' ESCAPE 'z'" $
+        Like (LiteralString "x") (LiteralString "y") (Escape (LiteralString "z"))
+
+    it "parses NOT LIKE" $ do
+      assertParseSuccess expression "'x' NOT LIKE 'y'" $
+        NotLike (LiteralString "x") (LiteralString "y") NoEscape
+
+    it "parses NOT LIKE with ESCAPE" $ do
+      assertParseSuccess expression "'x' NOT LIKE 'y' ESCAPE 'z'" $
+        NotLike (LiteralString "x") (LiteralString "y") (Escape (LiteralString "z"))
+
   describe "parenthesized" $ do
     it "parses parenthesized expressions" $ do
       assertParseSuccess expression "(1)" $
