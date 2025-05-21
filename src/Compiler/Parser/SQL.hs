@@ -1,5 +1,6 @@
 module Compiler.Parser.SQL
   ( expression
+  , expressionList
   ) where
 
 
@@ -27,11 +28,21 @@ import qualified Compiler.Parser.String as String
 type Parser = Parsec Error.Error String
 
 
+-- EXPRESSION LIST
+
+
+expressionList :: Parser Expression
+expressionList = do
+  first  <- expression
+  others <- many (id <$ char ',' <* space <*> expression)
+  return $ (ExpressionList (first : others))
+
+
+-- EXPRESSION
+
+
 expression :: Parser Expression
 expression = expression11
-
-
--- PRIMARY: PRECEDENCE 0
 
 
 expression0 :: Parser Expression

@@ -2,7 +2,9 @@ module Compiler.Parser.SQL.AST (Expression(..), EscapeClause(..)) where
 
 
 data Expression
+  -- CONTAINERS
   = Parenthesized Expression
+  | ExpressionList [Expression]
   -- LITERAL
   | LiteralInt Int
   | LiteralHex Int

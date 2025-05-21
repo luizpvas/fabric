@@ -291,3 +291,12 @@ spec = do
     it "parses like with escape" $ do
       assertSQLExpressionParenthesized "1 LIKE 2 ESCAPE 1 LIKE 2" $
         "((1 LIKE 2 ESCAPE 1) LIKE 2)"
+
+  describe "expression list" $ do
+    it "parses expressions separated by comma" $ do
+      assertParseSuccess expressionList "1, 2+2, 'x' ISNULL" $
+        ExpressionList
+          [ LiteralInt 1
+          , Sum (LiteralInt 2) (LiteralInt 2)
+          , IsNull (LiteralString "x")
+          ]
