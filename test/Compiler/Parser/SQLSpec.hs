@@ -55,6 +55,16 @@ spec = do
       assertParseSuccess expression "CURRENT_TIMESTAMP" $
         LiteralCurrentTimestamp
 
+  describe "column names" $ do
+    it "parses column names" $ do
+      assertParseSuccess expression "email" $ (ColumnName "email")
+
+    it "parses column names qualified with table name" $ do
+      assertParseSuccess expression "users.email" $ (TableColumnName "users" "email")
+
+    it "parses column names qualified with table name qualified with schema" $ do
+      assertParseSuccess expression "public.users.email" $ (SchemaTableColumnName "public" "users" "email")
+
   describe "unary prefix" $ do
     it "parses bitwise-not operator" $ do
       assertParseSuccess expression "~1" $ BitwiseNot (LiteralInt 1)

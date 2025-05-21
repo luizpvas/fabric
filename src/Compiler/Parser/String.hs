@@ -1,4 +1,7 @@
-module Compiler.Parser.String (singleQuotedParser) where
+module Compiler.Parser.String
+  ( singleQuoted
+  , doubleQuoted
+  ) where
 
 
 import Data.Void (Void)
@@ -6,10 +9,20 @@ import Text.Megaparsec
 import Text.Megaparsec.Char
 
 
-singleQuotedParser :: Parsec Void String String
-singleQuotedParser =
+singleQuoted :: Parsec Void String String
+singleQuoted =
   concat <$> between (char singleQuote) (char singleQuote) (many (try escaped <|> uninteresting))
   where
-    escaped       = (\a -> [a]) <$ char singleQuote <*> char singleQuote
+    escaped = (\a -> [a]) <$ char singleQuote <*> char singleQuote
     uninteresting = (\a -> [a]) <$> satisfy (\c -> c /= singleQuote)
-    singleQuote   = '\''
+    singleQuote = '\''
+
+
+doubleQuoted :: Parsec Void String String
+doubleQuoted =
+  concat <$> between (char doubleQuote) (char doubleQuote) (many (try escaped <|> uninteresting))
+  where
+    escaped = (\a -> [a]) <$ char escape <*> char doubleQuote
+    uninteresting = (\a -> [a]) <$> satisfy (\c -> c /= doubleQuote)
+    escape = '\\'
+    doubleQuote   = '\"'

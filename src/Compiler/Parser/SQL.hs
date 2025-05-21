@@ -43,6 +43,7 @@ expression0 =
     , literalTrue
     , literalFalse
     , literalCurrent
+    , columnName
     , fmap Parenthesized (between (char '(') (char ')') expression)
     ]
 
@@ -58,7 +59,7 @@ literalNumber =
 
 literalString :: Parser Expression
 literalString =
-  fmap LiteralString String.singleQuotedParser
+  fmap LiteralString String.singleQuoted
 
 
 literalBlob :: Parser Expression
@@ -91,6 +92,18 @@ literalCurrent =
       , LiteralCurrentTimestamp <$ string' "timestamp"
       , LiteralCurrentTime      <$ string' "time"
       ]
+
+
+columnName :: Parser Expression
+columnName = do
+  name1 <- Name.variable
+  name2 <- (optional . try) (id <$ char' '.' <*> Name.variable)
+  name3 <- (optional . try) (id <$ char' '.' <*> Name.variable)
+  return $
+    case (name2, name3) of
+      ((Just n2), (Just n3)) -> SchemaTableColumnName name1 n2 n3
+      ((Just n2), _)         -> TableColumnName name1 n2
+      (_, _)                 -> ColumnName name1
 
 
 expression1 :: Parser Expression
@@ -183,7 +196,7 @@ expression7 = do
       ]
 
 
-data Precedence8
+data Expression8
   = NextUnary (Expression -> Expression)
   | NextBinary (Expression -> Expression -> Expression) Expression
   | NextBinaryWithEscape (Expression -> Expression -> EscapeClause -> Expression) Expression EscapeClause
@@ -196,7 +209,7 @@ expression8 = do
   nexts <- many next
   return $ foldl eval left nexts
   where
-    eval :: Expression -> Precedence8 -> Expression
+    eval :: Expression -> Expression8 -> Expression
     eval left next =
       case next of
         NextUnary toExpr -> toExpr left
@@ -204,7 +217,7 @@ expression8 = do
         NextBinaryWithEscape toExpr right escape -> toExpr left right escape
         NextTernary toExpr middle right -> toExpr left middle right
 
-    next :: Parser Precedence8
+    next :: Parser Expression8
     next =
       choice
         [ NextUnary <$> unary

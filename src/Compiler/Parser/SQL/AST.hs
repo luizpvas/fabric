@@ -15,6 +15,10 @@ data Expression
   | LiteralCurrentTime
   | LiteralCurrentDate
   | LiteralCurrentTimestamp
+  -- COLUMN NAME
+  | ColumnName String
+  | TableColumnName String String
+  | SchemaTableColumnName String String String
   -- UNARY PREFIX
   | BitwiseNot Expression
   | Plus Expression
