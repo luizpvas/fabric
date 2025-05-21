@@ -59,6 +59,8 @@ data Expression
   | NotLike Expression Expression EscapeClause
   | In Expression Expression
   | NotIn Expression Expression
+  | Between Expression Expression Expression
+  | NotBetween Expression Expression Expression
   deriving (Show, Eq)
 
 

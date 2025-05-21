@@ -186,6 +186,10 @@ spec = do
       assertParseSuccess expression "1 AND 2" $
         And (LiteralInt 1) (LiteralInt 2)
 
+    it "parses OR " $ do
+      assertParseSuccess expression "1 OR 2" $
+        Or (LiteralInt 1) (LiteralInt 2)
+
     it "parses MATCH" $ do
       assertParseSuccess expression "1 MATCH 2" $
         Match (LiteralInt 1) (LiteralInt 2)
@@ -225,6 +229,14 @@ spec = do
     it "parses NOT LIKE with ESCAPE" $ do
       assertParseSuccess expression "'x' NOT LIKE 'y' ESCAPE 'z'" $
         NotLike (LiteralString "x") (LiteralString "y") (Escape (LiteralString "z"))
+
+    it "parses BETWEEN" $ do
+      assertParseSuccess expression "2 BETWEEN 1 AND 3" $
+        Between (LiteralInt 2) (LiteralInt 1) (LiteralInt 3)
+
+    it "parses NOT BETWEEN" $ do
+      assertParseSuccess expression "2 NOT BETWEEN 1 AND 3" $
+        NotBetween (LiteralInt 2) (LiteralInt 1) (LiteralInt 3)
 
   describe "parenthesized" $ do
     it "parses parenthesized expressions" $ do

@@ -27,7 +27,7 @@ type Parser = Parsec Void String
 
 
 expression :: Parser Expression
-expression = precedence11
+expression = precedence12
 
 
 -- PRIMARY: PRECEDENCE 0
@@ -261,6 +261,7 @@ data Precedence9
   = NextUnary (Expression -> Expression)
   | NextBinary (Expression -> Expression -> Expression) Expression
   | NextBinaryWithEscape (Expression -> Expression -> EscapeClause -> Expression) Expression EscapeClause
+  | NextTernary (Expression -> Expression -> Expression -> Expression) Expression Expression
 
 
 precedence9 :: Parser Expression
@@ -275,6 +276,7 @@ precedence9 = do
         NextUnary toExpr -> toExpr left
         NextBinary toExpr right -> toExpr left right
         NextBinaryWithEscape toExpr right escape -> toExpr left right escape
+        NextTernary toExpr middle right -> toExpr left middle right
 
     next :: Parser Precedence9
     next =
@@ -282,6 +284,8 @@ precedence9 = do
         [ NextUnary <$> unary
         , NextBinaryWithEscape <$> like <*> precedence8 <*> escape
         , try (NextBinaryWithEscape <$> notLike <*> precedence8 <*> escape)
+        , NextTernary <$> between <*> precedence8 <* string' "and" <* space1 <*> precedence8
+        , try (NextTernary <$> notBetween <*> precedence8 <* string' "and" <* space1 <*> precedence8)
         , NextBinary <$> binary <*> precedence8
         ]
 
@@ -307,6 +311,12 @@ precedence9 = do
         [ Escape <$ string' "escape" <* space1 <*> precedence8
         , pure NoEscape
         ]
+
+    between :: Parser (Expression -> Expression -> Expression -> Expression)
+    between = Between <$ string' "between" <* space1
+
+    notBetween :: Parser (Expression -> Expression -> Expression -> Expression)
+    notBetween = NotBetween <$ string' "not" <* space1 <* string' "between" <* space1
 
     binary :: Parser (Expression -> Expression -> Expression)
     binary = choice
