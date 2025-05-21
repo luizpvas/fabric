@@ -63,6 +63,7 @@ data Expression
   | NotLike Expression Expression EscapeClause
   | In Expression Expression
   | NotIn Expression Expression
+  -- TERNARY
   | Between Expression Expression Expression
   | NotBetween Expression Expression Expression
   deriving (Show, Eq)
@@ -72,13 +73,3 @@ data EscapeClause
   = NoEscape
   | Escape Expression
   deriving (Show, Eq)
-
-
--- data BinaryOperator
---   deriving (Show, Eq)
-
--- data TertiaryOperator
---   = Between Expression Expression Expression
---   deriving (Show, Eq)
-
-
