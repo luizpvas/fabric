@@ -97,14 +97,17 @@ literalCurrent =
 
 columnName :: Parser Expression
 columnName = do
-  name1 <- Name.variable
-  name2 <- (optional . try) (id <$ char' '.' <*> Name.variable)
-  name3 <- (optional . try) (id <$ char' '.' <*> Name.variable)
+  name1 <- name
+  name2 <- (optional . try) (id <$ char' '.' <*> name)
+  name3 <- (optional . try) (id <$ char' '.' <*> name)
   return $
     case (name2, name3) of
       ((Just n2), (Just n3)) -> SchemaTableColumnName name1 n2 n3
       ((Just n2), _)         -> TableColumnName name1 n2
       (_, _)                 -> ColumnName name1
+  where
+    name :: Parser String
+    name = String.doubleQuoted <|> Name.variable
 
 
 expression1 :: Parser Expression

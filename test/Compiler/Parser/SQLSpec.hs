@@ -59,11 +59,20 @@ spec = do
     it "parses column names" $ do
       assertParseSuccess expression "email" $ (ColumnName "email")
 
+    it "parses double quoted column names" $ do
+      assertParseSuccess expression "\"email\"" $ (ColumnName "email")
+
     it "parses column names qualified with table name" $ do
       assertParseSuccess expression "users.email" $ (TableColumnName "users" "email")
 
+    it "parses double quoted column names qualified with table name" $ do
+      assertParseSuccess expression "\"users\".\"email\"" $ (TableColumnName "users" "email")
+
     it "parses column names qualified with table name qualified with schema" $ do
       assertParseSuccess expression "public.users.email" $ (SchemaTableColumnName "public" "users" "email")
+
+    it "parses double quoted column names qualified with table name qualified with schema" $ do
+      assertParseSuccess expression "\"public\".\"users\".\"email\"" $ (SchemaTableColumnName "public" "users" "email")
 
   describe "unary prefix" $ do
     it "parses bitwise-not operator" $ do
@@ -121,7 +130,7 @@ spec = do
         Modulus (LiteralInt 1) (LiteralInt 2)
 
     it "parses sum" $ do
-      assertParseSuccess expression "1 +" $
+      assertParseSuccess expression "1 + 2" $
         Sum (LiteralInt 1) (LiteralInt 2)
 
     it "parses subtraction" $ do
