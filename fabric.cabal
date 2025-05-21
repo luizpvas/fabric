@@ -73,7 +73,7 @@ test-suite fabric-test
       Compiler.Parser.Assertion
       Compiler.Parser.NameSpec
       Compiler.Parser.NumberSpec
-      Compiler.Parser.SQLSpec
+      Compiler.Parser.SQL.ExpressionSpec
       Compiler.Parser.StringSpec
       Paths_fabric
   autogen-modules:

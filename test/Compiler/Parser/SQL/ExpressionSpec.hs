@@ -1,4 +1,4 @@
-module Compiler.Parser.SQLSpec (spec) where
+module Compiler.Parser.SQL.ExpressionSpec (spec) where
 
 
 import Compiler.Parser.SQL
@@ -249,6 +249,7 @@ spec = do
       assertParseSuccess expression "'x' NOT LIKE 'y' ESCAPE 'z'" $
         NotLike (LiteralString "x") (LiteralString "y") (Escape (LiteralString "z"))
 
+  describe "ternary" $ do
     it "parses BETWEEN" $ do
       assertParseSuccess expression "2 BETWEEN 1 AND 3" $
         Between (LiteralInt 2) (LiteralInt 1) (LiteralInt 3)
