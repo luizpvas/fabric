@@ -228,9 +228,7 @@ precedence8 = do
     operator = choice
       [ LessThanOrEqualTo    <$ string "<=" <* space
       , GreaterThanOrEqualTo <$ string ">=" <* space
-      -- NOTE: try is necessary because the operator <> (not equals) have lower
-      -- precedence than < (less than).
-      , try (LessThan <$ string ">" <* notFollowedBy (char '<') <* space)
+      , try (LessThan <$ string "<" <* notFollowedBy (char '>') <* space)
       , GreaterThan <$ string ">" <* space
       ]
 
@@ -311,13 +309,14 @@ precedence9 = do
 
     binaryIs :: Parser (Expression -> Expression -> Expression)
     binaryIs = choice
-      [ IsNot <$ string' "not" <* space1
+      [ string' "not" *> space1 *> binaryIsNot
+      , IsDistinctFrom <$ string' "distinct" <* space1 <* string' "from" <* space1
       , pure Is
       ]
 
     binaryIsNot :: Parser (Expression -> Expression -> Expression)
     binaryIsNot = choice
-      [ IsNotDistinctFrom <$ string' "distinct" <* space1 <* string' "from"
+      [ IsNotDistinctFrom <$ string' "distinct" <* space1 <* string' "from" <* space1
       , pure IsNot
       ]
 
