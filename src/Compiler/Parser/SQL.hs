@@ -27,14 +27,14 @@ type Parser = Parsec Void String
 
 
 expression :: Parser Expression
-expression = precedence12
+expression = expression11
 
 
 -- PRIMARY: PRECEDENCE 0
 
 
-precedence0 :: Parser Expression
-precedence0 =
+expression0 :: Parser Expression
+expression0 =
   choice
     [ literalNumber
     , literalString
@@ -93,45 +93,29 @@ literalCurrent =
       ]
 
 
--- PRECEDENCE 1
--- ~[expr]
--- +[expr]
--- -[expr]
-
-
-precedence1 :: Parser Expression
-precedence1 =
+expression1 :: Parser Expression
+expression1 =
   choice
-    [ BitwiseNot <$ char '~' <*> precedence1 <* space
-    , Plus       <$ char '+' <*> precedence1 <* space
-    , Minus      <$ char '-' <*> precedence1 <* space
-    , precedence0 <* space
+    [ BitwiseNot <$ char '~' <*> expression1 <* space
+    , Plus       <$ char '+' <*> expression1 <* space
+    , Minus      <$ char '-' <*> expression1 <* space
+    , expression0 <* space
     ]
 
 
--- PRECEDENCE 2
--- [expr] COLLATE (collation-name)
-
-
-precedence2 :: Parser Expression
-precedence2 = do
-  (\e f -> f e) <$> precedence1 <*> (collate <|> pure id)
+expression2 :: Parser Expression
+expression2 = do
+  (\e f -> f e) <$> expression1 <*> (collate <|> pure id)
   where
     collate :: Parser (Expression -> Expression)
     collate =
       Collate <$ string' "collate" <* space1 <*> Name.variable <* space
 
 
--- PRECEDENCE 3
--- [expr] || [expr]
--- [expr] -> [expr]
--- [expr] ->> [expr]
-
-
-precedence3 :: Parser Expression
-precedence3 = do
-  left  <- precedence2
-  pairs <- many ((,) <$> operator <*> precedence2)
+expression3 :: Parser Expression
+expression3 = do
+  left  <- expression2
+  pairs <- many ((,) <$> operator <*> expression2)
   return $ foldl (\l (op, r) -> op l r) left pairs
   where
     operator :: Parser (Expression -> Expression -> Expression)
@@ -142,16 +126,10 @@ precedence3 = do
       ]
 
 
--- PRECEDENCE 4
--- [expr] * [expr]
--- [expr] / [expr]
--- [expr] % [expr]
-
-
-precedence4 :: Parser Expression
-precedence4 = do
-  left <- precedence3
-  pairs <- many ((,) <$> operator <*> precedence3)
+expression4 :: Parser Expression
+expression4 = do
+  left <- expression3
+  pairs <- many ((,) <$> operator <*> expression3)
   return $ foldl (\l (op, r) -> op l r) left pairs
   where
     operator :: Parser (Expression -> Expression -> Expression)
@@ -162,15 +140,10 @@ precedence4 = do
       ]
 
 
--- PRECEDENCE 5
--- [expr] + [expr]
--- [expr] - [expr]
-
-
-precedence5 :: Parser Expression
-precedence5 = do
-  left <- precedence4
-  pairs <- many ((,) <$> operator <*> precedence4)
+expression5 :: Parser Expression
+expression5 = do
+  left <- expression4
+  pairs <- many ((,) <$> operator <*> expression4)
   return $ foldl (\l (op, r) -> op l r) left pairs
   where
     operator :: Parser (Expression -> Expression -> Expression)
@@ -180,17 +153,10 @@ precedence5 = do
       ]
 
 
--- PRECEDENCE 6
--- [expr] & [expr]
--- [expr] | [expr]
--- [expr] << [expr]
--- [expr] >> [expr]
-
-
-precedence6 :: Parser Expression
-precedence6 = do
-  left <- precedence5
-  pairs <- many ((,) <$> operator <*> precedence5)
+expression6 :: Parser Expression
+expression6 = do
+  left <- expression5
+  pairs <- many ((,) <$> operator <*> expression5)
   return $ foldl (\l (op, r) -> op l r) left pairs
   where
     operator :: Parser (Expression -> Expression -> Expression)
@@ -202,75 +168,35 @@ precedence6 = do
       ]
 
 
--- PRECEDENCE 7
--- [expr] ESCAPE [escape-character-expr]
-
-
-precedence7 :: Parser Expression
-precedence7 = precedence6
-
-
--- PRECEDENCE 8
--- [expr] < [expr]
--- [expr] > [expr]
--- [expr] <= [expr]
--- [expr] >= [expr]
-
-
-precedence8 :: Parser Expression
-precedence8 = do
-  left <- precedence7
-  pairs <- many ((,) <$> operator <*> precedence7)
+expression7 :: Parser Expression
+expression7 = do
+  left <- expression6
+  pairs <- many ((,) <$> operator <*> expression6)
   return $ foldl (\l (op, r) -> op l r) left pairs
   where
     operator :: Parser (Expression -> Expression -> Expression)
     operator = choice
-      [ LessThanOrEqualTo    <$ string "<=" <* space
+      [ LessThanOrEqualTo <$ string "<=" <* space
       , GreaterThanOrEqualTo <$ string ">=" <* space
       , try (LessThan <$ string "<" <* notFollowedBy (char '>') <* space)
       , GreaterThan <$ string ">" <* space
       ]
 
 
--- PRECEDENCE 9
--- [expr] = [expr]
--- [expr] == [expr]
--- [expr] <> [expr]
--- [expr] != [expr]
--- [expr] IS [expr]
--- [expr] IS NOT [expr]
--- [expr] IS DISTINCT FROM [expr]
--- [expr] IS NOT DISTINCT FROM [expr]
--- [expr] BETWEEN [expr] AND [expr]
--- [expr] IN [expr]
--- [expr] NOT IN [expr]
--- [expr] MATCH [expr]
--- [expr] NOT MATCH [expr]
--- [expr] LIKE [expr]
--- [expr] NOT LIKE [expr]
--- [expr] REGEXP [expr]
--- [expr] NOT REGEXP [expr]
--- [expr] GLOB [expr]
--- [expr] NOT GLOB [expr]
--- [expr] ISNULL
--- [expr] NOTNULL
--- [expr] NOT NULL
-
-
-data Precedence9
+data Precedence8
   = NextUnary (Expression -> Expression)
   | NextBinary (Expression -> Expression -> Expression) Expression
   | NextBinaryWithEscape (Expression -> Expression -> EscapeClause -> Expression) Expression EscapeClause
   | NextTernary (Expression -> Expression -> Expression -> Expression) Expression Expression
 
 
-precedence9 :: Parser Expression
-precedence9 = do
-  left <- precedence8
+expression8 :: Parser Expression
+expression8 = do
+  left <- expression7
   nexts <- many next
   return $ foldl eval left nexts
   where
-    eval :: Expression -> Precedence9 -> Expression
+    eval :: Expression -> Precedence8 -> Expression
     eval left next =
       case next of
         NextUnary toExpr -> toExpr left
@@ -278,15 +204,15 @@ precedence9 = do
         NextBinaryWithEscape toExpr right escape -> toExpr left right escape
         NextTernary toExpr middle right -> toExpr left middle right
 
-    next :: Parser Precedence9
+    next :: Parser Precedence8
     next =
       choice
         [ NextUnary <$> unary
-        , NextBinaryWithEscape <$> like <*> precedence8 <*> escape
-        , try (NextBinaryWithEscape <$> notLike <*> precedence8 <*> escape)
-        , NextTernary <$> between <*> precedence8 <* string' "and" <* space1 <*> precedence8
-        , try (NextTernary <$> notBetween <*> precedence8 <* string' "and" <* space1 <*> precedence8)
-        , NextBinary <$> binary <*> precedence8
+        , NextBinaryWithEscape <$> like <*> expression7 <*> escape
+        , try (NextBinaryWithEscape <$> notLike <*> expression7 <*> escape)
+        , NextTernary <$> between <*> expression7 <* string' "and" <* space1 <*> expression7
+        , try (NextTernary <$> notBetween <*> expression7 <* string' "and" <* space1 <*> expression7)
+        , NextBinary <$> binary <*> expression7
         ]
 
     unary :: Parser (Expression -> Expression)
@@ -308,7 +234,7 @@ precedence9 = do
     escape :: Parser EscapeClause
     escape =
       choice
-        [ Escape <$ string' "escape" <* space1 <*> precedence8
+        [ Escape <$ string' "escape" <* space1 <*> expression7
         , pure NoEscape
         ]
 
@@ -352,34 +278,22 @@ precedence9 = do
       ]
 
 
--- PRECEDENCE 10
--- NOT [expr]
-
-
-precedence10 :: Parser Expression
-precedence10 = do
+expression9 :: Parser Expression
+expression9 = do
   nots <- many (string' "not" <* space1)
-  expr <- precedence9
+  expr <- expression8
   return $ foldl (\expr _ -> Not expr) expr nots
 
 
--- PRECEDENCE 11
--- [expr] AND [expr]
-
-
-precedence11 :: Parser Expression
-precedence11 = do
-  left <- precedence10
-  pairs <- many ((,) <$> string' "and" <* space1 <*> precedence10)
+expression10 :: Parser Expression
+expression10 = do
+  left <- expression9
+  pairs <- many ((,) <$> string' "and" <* space1 <*> expression9)
   return $ foldl (\left (_, right) -> And left right) left pairs
 
 
--- PRECEDENCE 12
--- [expr] OR [expr]
-
-
-precedence12 :: Parser Expression
-precedence12 = do
-  left <- precedence11
-  pairs <- many ((,) <$> string' "or" <* space1 <*> precedence11)
+expression11 :: Parser Expression
+expression11 = do
+  left <- expression10
+  pairs <- many ((,) <$> string' "or" <* space1 <*> expression10)
   return $ foldl (\left (_, right) -> Or left right) left pairs
