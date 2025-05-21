@@ -196,8 +196,8 @@ precedence6 = do
   where
     operator :: Parser (Expression -> Expression -> Expression)
     operator = choice
-      [ BitwiseAnd        <$ string "&" <* space
-      , BitwiseOr         <$ string "|" <* space
+      [ BitwiseAnd        <$ string "&"  <* space
+      , BitwiseOr         <$ string "|"  <* space
       , BitwiseShiftLeft  <$ string "<<" <* space
       , BitwiseShiftRight <$ string ">>" <* space
       ]
