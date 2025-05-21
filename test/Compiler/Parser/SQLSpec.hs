@@ -57,162 +57,155 @@ spec = do
 
   describe "unary prefix" $ do
     it "parses bitwise-not operator" $ do
-      assertParseSuccess expression "~1" $
-        Operator (BitwiseNot (LiteralInt 1))
+      assertParseSuccess expression "~1" $ BitwiseNot (LiteralInt 1)
 
     it "parses plus operator on non-numbers" $ do
-      assertParseSuccess expression "+NULL" $
-        Operator (Plus (LiteralNull))
+      assertParseSuccess expression "+NULL" $ Plus (LiteralNull)
 
     it "parses plus operator on numbers" $ do
-      assertParseSuccess expression "+1" $
-        Operator (Plus (LiteralInt 1))
+      assertParseSuccess expression "+1" $ Plus (LiteralInt 1)
 
     it "parses minus operator" $ do
-      assertParseSuccess expression "-0.1" $
-        Operator (Minus (LiteralFloat 0.1))
+      assertParseSuccess expression "-0.1" $ Minus (LiteralFloat 0.1)
 
   describe "unary postfix" $ do
     it "parses COLLATE operator" $ do
       assertParseSuccess expression "'hello' COLLATE NOCASE" $
-        Operator (Collate "NOCASE" (LiteralString "hello"))
+        Collate "NOCASE" (LiteralString "hello")
 
     it "parses ISNULL operator" $ do
-      assertParseSuccess expression "NULL ISNULL" $
-        Operator (IsNull LiteralNull)
+      assertParseSuccess expression "NULL ISNULL" $ IsNull LiteralNull
 
     it "parses NOTNULL operator" $ do
-      assertParseSuccess expression "NULL NOTNULL" $
-        Operator (NotNull LiteralNull)
+      assertParseSuccess expression "NULL NOTNULL" $ NotNull LiteralNull
 
     it "parses NOT NULL operator" $ do
-      assertParseSuccess expression "NULL NOT NULL" $
-        Operator (NotNull LiteralNull)
+      assertParseSuccess expression "NULL NOT NULL" $ NotNull LiteralNull
 
   describe "binary" $ do
     it "parses string concatenation" $ do
       assertParseSuccess expression "'x' || 'y'" $
-        Operator (StringConcatenation (LiteralString "x") (LiteralString "y"))
+        StringConcatenation (LiteralString "x") (LiteralString "y")
 
     it "parses JSON extract single arrow" $ do
       assertParseSuccess expression "'{}'->'$'" $
-        Operator (JsonExtractSingleArrow (LiteralString "{}") (LiteralString "$"))
+        JsonExtractSingleArrow (LiteralString "{}") (LiteralString "$")
 
     it "parses JSON extract double arrow" $ do
       assertParseSuccess expression "'[0,1,2]'->>2" $
-        Operator (JsonExtractDoubleArrow (LiteralString "[0,1,2]") (LiteralInt 2))
+        JsonExtractDoubleArrow (LiteralString "[0,1,2]") (LiteralInt 2)
 
     it "parses multiplication" $ do
       assertParseSuccess expression "1 * 2" $
-        Operator (Multiplication (LiteralInt 1) (LiteralInt 2))
+        Multiplication (LiteralInt 1) (LiteralInt 2)
 
     it "parses division" $ do
       assertParseSuccess expression "1 / 2" $
-        Operator (Division (LiteralInt 1) (LiteralInt 2))
+        Division (LiteralInt 1) (LiteralInt 2)
 
     it "parses modulus (reminder)" $ do
       assertParseSuccess expression "1 % 2" $
-        Operator (Modulus (LiteralInt 1) (LiteralInt 2))
+        Modulus (LiteralInt 1) (LiteralInt 2)
 
     it "parses sum" $ do
       assertParseSuccess expression "1 + 2" $
-        Operator (Sum (LiteralInt 1) (LiteralInt 2))
+        Sum (LiteralInt 1) (LiteralInt 2)
 
     it "parses subtraction" $ do
       assertParseSuccess expression "1 - 2" $
-        Operator (Subtraction (LiteralInt 1) (LiteralInt 2))
+        Subtraction (LiteralInt 1) (LiteralInt 2)
 
     it "parses bitwise and" $ do
       assertParseSuccess expression "1 & 2" $
-        Operator (BitwiseAnd (LiteralInt 1) (LiteralInt 2))
+        BitwiseAnd (LiteralInt 1) (LiteralInt 2)
 
     it "parses bitwise or" $ do
       assertParseSuccess expression "1 | 2" $
-        Operator (BitwiseOr (LiteralInt 1) (LiteralInt 2))
+        BitwiseOr (LiteralInt 1) (LiteralInt 2)
 
     it "parses bitwise shift left" $ do
       assertParseSuccess expression "1 << 2" $
-        Operator (BitwiseShiftLeft (LiteralInt 1) (LiteralInt 2))
+        BitwiseShiftLeft (LiteralInt 1) (LiteralInt 2)
 
     it "parses bitwise shift right" $ do
       assertParseSuccess expression "1 >> 2" $
-        Operator (BitwiseShiftRight (LiteralInt 1) (LiteralInt 2))
+        BitwiseShiftRight (LiteralInt 1) (LiteralInt 2)
 
     it "parses less than" $ do
       assertParseSuccess expression "1 < 2" $
-        Operator (LessThan (LiteralInt 1) (LiteralInt 2))
+        LessThan (LiteralInt 1) (LiteralInt 2)
 
     it "parses less than or equal to" $ do
       assertParseSuccess expression "1 <= 2" $
-        Operator (LessThanOrEqualTo (LiteralInt 1) (LiteralInt 2))
+        LessThanOrEqualTo (LiteralInt 1) (LiteralInt 2)
 
     it "parses greater than" $ do
       assertParseSuccess expression "1 > 2" $
-        Operator (GreaterThan (LiteralInt 1) (LiteralInt 2))
+        GreaterThan (LiteralInt 1) (LiteralInt 2)
 
     it "parses greater than or equal to" $ do
       assertParseSuccess expression "1 >= 2" $
-        Operator (GreaterThanOrEqualTo (LiteralInt 1) (LiteralInt 2))
+        GreaterThanOrEqualTo (LiteralInt 1) (LiteralInt 2)
 
     it "parses equals" $ do
       assertParseSuccess expression "1 = 2" $ do
-        Operator (Equals (LiteralInt 1) (LiteralInt 2))
+        Equals (LiteralInt 1) (LiteralInt 2)
 
     it "parses double equals" $ do
       assertParseSuccess expression "1 == 2" $ do
-        Operator (Equals (LiteralInt 1) (LiteralInt 2))
+        Equals (LiteralInt 1) (LiteralInt 2)
 
     it "parses not equals with <>" $ do
       assertParseSuccess expression "1 <> 2" $ do
-        Operator (NotEquals (LiteralInt 1) (LiteralInt 2))
+        NotEquals (LiteralInt 1) (LiteralInt 2)
 
     it "parses not equals with !=" $ do
       assertParseSuccess expression "1 != 2" $ do
-        Operator (NotEquals (LiteralInt 1) (LiteralInt 2))
+        NotEquals (LiteralInt 1) (LiteralInt 2)
 
     it "parses IS" $ do
       assertParseSuccess expression "1 IS 2" $ do
-        Operator (Is (LiteralInt 1) (LiteralInt 2))
+        Is (LiteralInt 1) (LiteralInt 2)
 
     it "parses IS NOT" $ do
       assertParseSuccess expression "1 IS NOT 2" $ do
-        Operator (IsNot (LiteralInt 1) (LiteralInt 2))
+        IsNot (LiteralInt 1) (LiteralInt 2)
 
     it "parses IS DISTINCT FROM" $ do
       assertParseSuccess expression "1 IS DISTINCT FROM 2" $ do
-        Operator (IsDistinctFrom (LiteralInt 1) (LiteralInt 2))
+        IsDistinctFrom (LiteralInt 1) (LiteralInt 2)
 
     it "parses IS NOT DISTINCT FROM" $ do
       assertParseSuccess expression "1 IS NOT DISTINCT FROM 2" $ do
-        Operator (IsNotDistinctFrom (LiteralInt 1) (LiteralInt 2))
+        IsNotDistinctFrom (LiteralInt 1) (LiteralInt 2)
 
     it "parses AND" $ do
       assertParseSuccess expression "1 AND 2" $
-        Operator (And (LiteralInt 1) (LiteralInt 2))
+        And (LiteralInt 1) (LiteralInt 2)
 
     it "parses MATCH" $ do
       assertParseSuccess expression "1 MATCH 2" $
-        Operator (Match (LiteralInt 1) (LiteralInt 2))
+        Match (LiteralInt 1) (LiteralInt 2)
 
     it "parses NOT MATCH" $ do
       assertParseSuccess expression "1 NOT MATCH 2" $
-        Operator (NotMatch (LiteralInt 1) (LiteralInt 2))
+        NotMatch (LiteralInt 1) (LiteralInt 2)
 
     it "parses REGEXP" $ do
       assertParseSuccess expression "'12' REGEXP '\\d'" $
-        Operator (Regexp (LiteralString "12") (LiteralString "\\d"))
+        Regexp (LiteralString "12") (LiteralString "\\d")
 
     it "parses NOT REGEXP" $ do
       assertParseSuccess expression "'12' NOT REGEXP '\\d'" $
-        Operator (NotRegexp (LiteralString "12") (LiteralString "\\d"))
+        NotRegexp (LiteralString "12") (LiteralString "\\d")
 
     it "parses GLOB" $ do
       assertParseSuccess expression "'x' GLOB 'y'" $
-        Operator (Glob (LiteralString "x") (LiteralString "y"))
+        Glob (LiteralString "x") (LiteralString "y")
 
     it "parses NOT GLOB" $ do
       assertParseSuccess expression "'x' NOT GLOB 'y'" $
-        Operator (NotGlob (LiteralString "x") (LiteralString "y"))
+        NotGlob (LiteralString "x") (LiteralString "y")
 
   describe "parenthesized" $ do
     it "parses parenthesized expressions" $ do
@@ -226,9 +219,7 @@ spec = do
     it "parses parenthesized subexpressions" $ do
       assertParseSuccess expression "((1*2)+(3*4))" $
         Parenthesized (
-          Operator (
-            Sum
-              (Parenthesized (Operator (Multiplication (LiteralInt 1) (LiteralInt 2))))
-              (Parenthesized (Operator (Multiplication (LiteralInt 3) (LiteralInt 4))))
-          )
+          Sum
+            (Parenthesized (Multiplication (LiteralInt 1) (LiteralInt 2)))
+            (Parenthesized (Multiplication (LiteralInt 3) (LiteralInt 4)))
         )

@@ -1,13 +1,9 @@
-module Compiler.Parser.SQL.AST
-  ( Expression(..)
-  , Operator(..)
-  )
-  where
+module Compiler.Parser.SQL.AST (Expression(..)) where
 
 
 data Expression
   = Parenthesized Expression
-  | Operator Operator
+  -- LITERAL
   | LiteralInt Int
   | LiteralHex Int
   | LiteralFloat Float
@@ -19,12 +15,8 @@ data Expression
   | LiteralCurrentTime
   | LiteralCurrentDate
   | LiteralCurrentTimestamp
-  deriving (Show, Eq)
-
-
-data Operator
   -- UNARY PREFIX
-  = BitwiseNot Expression
+  | BitwiseNot Expression
   | Plus Expression
   | Minus Expression
   -- UNARY POSTFIX
@@ -62,13 +54,13 @@ data Operator
   | NotRegexp Expression Expression
   | Glob Expression Expression
   | NotGlob Expression Expression
+  | Like Expression Expression -- TODO: handle ESCAPE
+  | NotLike Expression Expression
+  | In Expression Expression
+  | NotIn Expression Expression
   deriving (Show, Eq)
 
 -- data BinaryOperator
---   = In Expression Expression
---   | NotIn Expression Expression
---   | Like Expression Expression -- TODO: handle ESCAPE
---   | NotLike Expression Expression
 --   deriving (Show, Eq)
 
 -- data TertiaryOperator

@@ -10,20 +10,6 @@ module Compiler.Parser.SQL
 -- SELECT 'HELLO ' COLLATE RTRIM = 'HELLO'
 -- SELECT NOT NULL NOTNULL IS NOT NULL
 
--- expression
--- primaryExpression
--- unaryPrefixBitwiseNot
--- $1 !! Operator . BitwiseNot !! expression
---   literalNumber(2)
---   space
---   binaryRight
---   $2 !! toSum (rhs = 2) !! expression
---     literalNumber(3)
---     space
---     eof
---   $2 !! toSum (rhs=2) (lhs=3)
--- $1 !! Operator . BitwiseNot (sum)
-
 
 import Data.Void
 import Debug.Trace
@@ -42,7 +28,7 @@ type Parser = Parsec Void String
 
 
 expression :: Parser Expression
-expression = precedence6
+expression = precedence9
 
 
 -- PRIMARY: PRECEDENCE 0
@@ -117,9 +103,9 @@ literalCurrent =
 precedence1 :: Parser Expression
 precedence1 =
   choice
-    [ Operator . BitwiseNot <$ char '~' <*> precedence1 <* space
-    , Operator . Plus       <$ char '+' <*> precedence1 <* space
-    , Operator . Minus      <$ char '-' <*> precedence1 <* space
+    [ BitwiseNot <$ char '~' <*> precedence1 <* space
+    , Plus       <$ char '+' <*> precedence1 <* space
+    , Minus      <$ char '-' <*> precedence1 <* space
     , primary <* space
     ]
 
@@ -134,7 +120,7 @@ precedence2 = do
   where
     collate :: Parser (Expression -> Expression)
     collate =
-      (\n e -> Operator (Collate n e)) <$ string' "collate" <* space1 <*> Name.variable <* space
+      Collate <$ string' "collate" <* space1 <*> Name.variable <* space
 
 
 -- PRECEDENCE 3
@@ -147,9 +133,9 @@ precedence3 :: Parser Expression
 precedence3 = do
   left  <- precedence2
   pairs <- many ((,) <$> operator <*> precedence2)
-  return $ foldl (\l (op, r) -> Operator (op l r)) left pairs
+  return $ foldl (\l (op, r) -> op l r) left pairs
   where
-    operator :: Parser (Expression -> Expression -> Operator)
+    operator :: Parser (Expression -> Expression -> Expression)
     operator = choice
       [ StringConcatenation    <$ string "||"  <* space
       , JsonExtractDoubleArrow <$ string "->>" <* space
@@ -167,9 +153,9 @@ precedence4 :: Parser Expression
 precedence4 = do
   left <- precedence3
   pairs <- many ((,) <$> operator <*> precedence3)
-  return $ foldl (\l (op, r) -> Operator (op l r)) left pairs
+  return $ foldl (\l (op, r) -> op l r) left pairs
   where
-    operator :: Parser (Expression -> Expression -> Operator)
+    operator :: Parser (Expression -> Expression -> Expression)
     operator = choice
       [ Multiplication <$ string "*" <* space
       , Division       <$ string "/" <* space
@@ -186,9 +172,9 @@ precedence5 :: Parser Expression
 precedence5 = do
   left <- precedence4
   pairs <- many ((,) <$> operator <*> precedence4)
-  return $ foldl (\l (op, r) -> Operator (op l r)) left pairs
+  return $ foldl (\l (op, r) -> op l r) left pairs
   where
-    operator :: Parser (Expression -> Expression -> Operator)
+    operator :: Parser (Expression -> Expression -> Expression)
     operator = choice
       [ Sum         <$ string "+" <* space
       , Subtraction <$ string "-" <* space
@@ -206,9 +192,9 @@ precedence6 :: Parser Expression
 precedence6 = do
   left <- precedence5
   pairs <- many ((,) <$> operator <*> precedence5)
-  return $ foldl (\l (op, r) -> Operator (op l r)) left pairs
+  return $ foldl (\l (op, r) -> op l r) left pairs
   where
-    operator :: Parser (Expression -> Expression -> Operator)
+    operator :: Parser (Expression -> Expression -> Expression)
     operator = choice
       [ BitwiseAnd        <$ string "&" <* space
       , BitwiseOr         <$ string "|" <* space
@@ -217,110 +203,107 @@ precedence6 = do
       ]
 
 
--- REST
+-- PRECEDENCE 7
+-- [expr] ESCAPE [escape-character-expr]
 
 
-unaryPostfix :: Parser (Expression -> Expression)
-unaryPostfix =
-  choice
-    [ string' "not" *> space *> unaryPostfixNot
-    , toCollate <$ string' "collate" <* space1 <*> Name.variable
-    , toIsNull  <$ string' "isnull"
-    ]
+precedence7 :: Parser Expression
+precedence7 = precedence6
+
+
+-- PRECEDENCE 8
+-- [expr] < [expr]
+-- [expr] > [expr]
+-- [expr] <= [expr]
+-- [expr] >= [expr]
+
+
+precedence8 :: Parser Expression
+precedence8 = do
+  left <- precedence7
+  pairs <- many ((,) <$> operator <*> precedence7)
+  return $ foldl (\l (op, r) -> op l r) left pairs
   where
-    toIsNull expr = Operator (IsNull expr)
-    toCollate collationName expr = Operator (Collate collationName expr)
+    operator :: Parser (Expression -> Expression -> Expression)
+    operator = choice
+      [ LessThanOrEqualTo    <$ string "<=" <* space
+      , GreaterThanOrEqualTo <$ string ">=" <* space
+      -- NOTE: try is necessary because the operator <> (not equals) have lower
+      -- precedence than < (less than).
+      , try (LessThan <$ string ">" <* notFollowedBy (char '<') <* space)
+      , GreaterThan <$ string ">"  <* space
+      ]
 
 
-unaryPostfixNot :: Parser (Expression -> Expression)
-unaryPostfixNot =
-  choice
-    [ toNotNull   <$ string' "null"
-    , toNotMatch  <$ string' "match"  <* space <*> expression
-    , toNotRegexp <$ string' "regexp" <* space <*> expression
-    , toNotGlob   <$ string' "glob"   <* space <*> expression
+-- PRECEDENCE 9
+-- [expr] = [expr]
+-- [expr] == [expr]
+-- [expr] <> [expr]
+-- [expr] != [expr]
+-- [expr] IS [expr]
+-- [expr] IS NOT [expr]
+-- [expr] IS DISTINCT FROM [expr]
+-- [expr] IS NOT DISTINCT FROM [expr]
+-- [expr] BETWEEN [expr] AND [expr]
+-- [expr] IN [expr]
+-- [expr] NOT IN [expr]
+-- [expr] MATCH [expr]
+-- [expr] NOT MATCH [expr]
+-- [expr] LIKE [expr]
+-- [expr] NOT LIKE [expr]
+-- [expr] REGEXP [expr]
+-- [expr] NOT REGEXP [expr]
+-- [expr] GLOB [expr]
+-- [expr] NOT GLOB [expr]
+-- [expr] ISNULL
+-- [expr] NOTNULL
+-- [expr] NOT NULL
+
+-- unary postfix
+-- binary default
+-- in
+-- between
+
+precedence9 :: Parser Expression
+precedence9 = do
+  left <- precedence8
+
+  result <- choice
+    [ unary (trace ("trying unary: " ++ show left) left)
+    , binary (trace ("trying binary: " ++ show left) left)
+    , pure left
     ]
+
+  return result
   where
-    toNotNull           = Operator . NotNull
-    toNotMatch rhs lhs  = Operator (NotMatch lhs rhs)
-    toNotRegexp rhs lhs = Operator (NotRegexp lhs rhs)
-    toNotGlob rhs lhs   = Operator (NotGlob lhs rhs)
+    unary :: Expression -> Parser Expression
+    unary expr =
+      choice
+        [ IsNull expr  <$ string' "isnull"
+        -- NOTE: try is necessary because "[expr] NOT" might refer to unary
+        -- postfix operators (NOTNULL or NOT NULL) but it could also be the
+        -- start of a binary "[expr] NOT LIKE [expr]" or "[expr] NOT IN [expr]".
+        , try (NotNull expr <$ string' "not" <* space <* string' "null")
+        ]
 
+    binary :: Expression -> Parser Expression
+    binary left = choice
+      [ Equals left <$ string "==" <* space  <*> precedence8
+      , Equals left <$ string "=" <* space  <*> precedence8
+      , NotEquals left <$ string "<>" <* space  <*> precedence8
+      , NotEquals left <$ string "!=" <* space  <*> precedence8
+      , Glob left <$ string' "glob" <* space  <*> precedence8
+      , Regexp left <$ string' "regexp" <* space  <*> precedence8
+      , Match left <$ string' "match" <* space  <*> precedence8
+      , Like left <$ string' "like" <* space  <*> precedence8
+      , binaryNot left <* string' "not" <* space1
+      ]
 
-binaryRight :: Parser (Expression -> Expression)
-binaryRight =
-  choice
-    [ string' "is"  *> space *> binaryRightIs
-    , toAnd                    <$ string' "and"    <* space <*> expression
-    , toOr                     <$ string' "or"     <* space <*> expression
-    , toMatch                  <$ string' "match"  <* space <*> expression
-    , toRegexp                 <$ string' "regexp" <* space <*> expression
-    , toGlob                   <$ string' "glob"   <* space <*> expression
-    , toJsonExtractDoubleArrow <$ string "->>" <* space <*> expression
-    , toJsonExtractSingleArrow <$ string "->"  <* space <*> expression
-    , toStringConcatenation    <$ string "||"  <* space <*> expression
-    , toBitwiseShiftLeft       <$ string "<<"  <* space <*> expression
-    , toBitwiseShiftRight      <$ string ">>"  <* space <*> expression
-    , toLessThanOrEqualTo      <$ string "<="  <* space <*> expression
-    , toNotEquals              <$ string "<>"  <* space <*> expression
-    , toNotEquals              <$ string "!="  <* space <*> expression
-    , toGreaterThanOrEqualTo   <$ string ">="  <* space <*> expression
-    , toEquals                 <$ string "=="  <* space <*> expression
-    , toMultiplication         <$ string "*"   <* space <*> expression
-    , toDivision               <$ string "/"   <* space <*> expression
-    , toModulus                <$ string "%"   <* space <*> expression
-    , toSum                    <$ string "+"   <* space <*> expression
-    , toSubtraction            <$ string "-"   <* space <*> expression
-    , toBitwiseAnd             <$ string "&"   <* space <*> expression
-    , toBitwiseOr              <$ string "|"   <* space <*> expression
-    , toLessThan               <$ string "<"   <* space <*> expression
-    , toGreaterThan            <$ string ">"   <* space <*> expression
-    , toEquals                 <$ string "="   <* space <*> expression
-    ]
-  where
-    toAnd rhs lhs                    = Operator (And lhs rhs)
-    toOr rhs lhs                     = Operator (Or lhs rhs)
-    toMatch rhs lhs                  = Operator (Match lhs rhs)
-    toRegexp rhs lhs                 = Operator (Regexp lhs rhs)
-    toGlob rhs lhs                   = Operator (Glob lhs rhs)
-    toJsonExtractDoubleArrow rhs lhs = Operator (JsonExtractDoubleArrow lhs rhs)
-    toJsonExtractSingleArrow rhs lhs = Operator (JsonExtractSingleArrow lhs rhs)
-    toStringConcatenation rhs lhs    = Operator (StringConcatenation lhs rhs)
-    toBitwiseShiftLeft rhs lhs       = Operator (BitwiseShiftLeft lhs rhs)
-    toBitwiseShiftRight rhs lhs      = Operator (BitwiseShiftRight lhs rhs)
-    toLessThanOrEqualTo rhs lhs      = Operator (LessThanOrEqualTo lhs rhs)
-    toNotEquals rhs lhs              = Operator (NotEquals lhs rhs)
-    toGreaterThanOrEqualTo rhs lhs   = Operator (GreaterThanOrEqualTo lhs rhs)
-    toEquals rhs lhs                 = Operator (Equals lhs rhs)
-    toMultiplication rhs lhs         = Operator (Multiplication lhs rhs)
-    toDivision rhs lhs               = Operator (Division lhs rhs)
-    toModulus rhs lhs                = Operator (Modulus lhs rhs)
-    toSum rhs lhs                    = Operator (Sum lhs rhs)
-    toSubtraction rhs lhs            = Operator (Subtraction lhs rhs)
-    toBitwiseAnd rhs lhs             = Operator (BitwiseAnd lhs rhs)
-    toBitwiseOr rhs lhs              = Operator (BitwiseOr lhs rhs)
-    toLessThan rhs lhs               = Operator (LessThan lhs rhs)
-    toGreaterThan rhs lhs            = Operator (GreaterThan lhs rhs)
+    binaryNot :: Expression ->  Parser Expression
+    binaryNot left = choice
+      [ NotGlob left <$ string' "glob" <* space <*> precedence8
+      , NotRegexp left <$ string' "regexp" <* space <*> precedence8
+      , NotMatch left  <$ string' "match" <* space <*> precedence8
+      , NotLike left <$ string' "like" <* space <*> precedence8
+      ]
 
-
-binaryRightIs :: Parser (Expression -> Expression)
-binaryRightIs =
-  choice
-    [ string' "not" *> space *> binaryRightIsNot
-    , toIsDistinctFrom <$ string' "distinct" <* space1 <* string' "from" <* space <*> expression
-    , toIs <$> expression
-    ]
-  where
-    toIsDistinctFrom rhs lhs = Operator (IsDistinctFrom lhs rhs)
-    toIs rhs lhs             = Operator (Is lhs rhs)
-
-
-binaryRightIsNot :: Parser (Expression -> Expression)
-binaryRightIsNot =
-  choice
-    [ toIsNotDistinctFrom <$ string' "distinct" <* space1 <* string' "from" <* space <*> expression
-    , toIsNot <$> expression
-    ]
-  where
-    toIsNot rhs lhs = Operator (IsNot lhs rhs)
-    toIsNotDistinctFrom rhs lhs = Operator (IsNotDistinctFrom lhs rhs)
