@@ -259,51 +259,60 @@ precedence8 = do
 -- [expr] NOTNULL
 -- [expr] NOT NULL
 
--- unary postfix
--- binary default
--- in
--- between
+
+data Precedence9
+  = Unary (Expression -> Expression)
+  | Binary (Expression -> Expression -> Expression) Expression
+  -- | Ternary Expression Expression (Expression -> Expression -> Expression -> Expression)
+
 
 precedence9 :: Parser Expression
 precedence9 = do
   left <- precedence8
-
-  result <- choice
-    [ unary (trace ("trying unary: " ++ show left) left)
-    , binary (trace ("trying binary: " ++ show left) left)
-    , pure left
-    ]
-
-  return result
+  nexts <- many next
+  return $ foldl eval left nexts
   where
-    unary :: Expression -> Parser Expression
-    unary expr =
+    eval :: Expression -> Precedence9 -> Expression
+    eval expr next =
+      case next of
+        Unary toExpr -> toExpr expr
+        Binary toExpr right -> toExpr expr right
+
+    next :: Parser Precedence9
+    next =
       choice
-        [ IsNull expr  <$ string' "isnull"
+        [ Unary <$> unary
+        , Binary <$> binary <*> precedence8
+        ]
+
+    unary :: Parser (Expression -> Expression)
+    unary =
+      choice
+        [ IsNull <$ string' "isnull"
         -- NOTE: try is necessary because "[expr] NOT" might refer to unary
         -- postfix operators (NOTNULL or NOT NULL) but it could also be the
         -- start of a binary "[expr] NOT LIKE [expr]" or "[expr] NOT IN [expr]".
-        , try (NotNull expr <$ string' "not" <* space <* string' "null")
+        , try (NotNull <$ string' "not" <* space <* string' "null")
         ]
 
-    binary :: Expression -> Parser Expression
-    binary left = choice
-      [ Equals left <$ string "==" <* space  <*> precedence8
-      , Equals left <$ string "=" <* space  <*> precedence8
-      , NotEquals left <$ string "<>" <* space  <*> precedence8
-      , NotEquals left <$ string "!=" <* space  <*> precedence8
-      , Glob left <$ string' "glob" <* space  <*> precedence8
-      , Regexp left <$ string' "regexp" <* space  <*> precedence8
-      , Match left <$ string' "match" <* space  <*> precedence8
-      , Like left <$ string' "like" <* space  <*> precedence8
-      , binaryNot left <* string' "not" <* space1
+    binary :: Parser (Expression -> Expression -> Expression)
+    binary = choice
+      [ Equals <$ string "==" <* space
+      , Equals <$ string "=" <* space
+      , NotEquals <$ string "<>" <* space
+      , NotEquals <$ string "!=" <* space
+      , Glob <$ string' "glob" <* space
+      , Regexp <$ string' "regexp" <* space
+      , Match <$ string' "match" <* space
+      , Like <$ string' "like" <* space
+      , string' "not" *> space1 *> binaryNot
       ]
 
-    binaryNot :: Expression ->  Parser Expression
-    binaryNot left = choice
-      [ NotGlob left <$ string' "glob" <* space <*> precedence8
-      , NotRegexp left <$ string' "regexp" <* space <*> precedence8
-      , NotMatch left  <$ string' "match" <* space <*> precedence8
-      , NotLike left <$ string' "like" <* space <*> precedence8
+    binaryNot :: Parser (Expression -> Expression -> Expression)
+    binaryNot = choice
+      [ NotGlob <$ string' "glob" <* space
+      , NotRegexp <$ string' "regexp" <* space
+      , NotMatch <$ string' "match" <* space
+      , NotLike <$ string' "like" <* space
       ]
 
