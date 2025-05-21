@@ -19,6 +19,7 @@ data Expression
   | BitwiseNot Expression
   | Plus Expression
   | Minus Expression
+  | Not Expression
   -- UNARY POSTFIX
   | Collate String Expression
   | IsNull Expression

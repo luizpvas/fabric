@@ -28,7 +28,7 @@ type Parser = Parsec Void String
 
 
 expression :: Parser Expression
-expression = precedence9
+expression = precedence11
 
 
 -- PRIMARY: PRECEDENCE 0
@@ -231,7 +231,7 @@ precedence8 = do
       -- NOTE: try is necessary because the operator <> (not equals) have lower
       -- precedence than < (less than).
       , try (LessThan <$ string ">" <* notFollowedBy (char '<') <* space)
-      , GreaterThan <$ string ">"  <* space
+      , GreaterThan <$ string ">" <* space
       ]
 
 
@@ -305,7 +305,20 @@ precedence9 = do
       , Regexp <$ string' "regexp" <* space
       , Match <$ string' "match" <* space
       , Like <$ string' "like" <* space
+      , string' "is" *> space1 *> binaryIs
       , string' "not" *> space1 *> binaryNot
+      ]
+
+    binaryIs :: Parser (Expression -> Expression -> Expression)
+    binaryIs = choice
+      [ IsNot <$ string' "not" <* space1
+      , pure Is
+      ]
+
+    binaryIsNot :: Parser (Expression -> Expression -> Expression)
+    binaryIsNot = choice
+      [ IsNotDistinctFrom <$ string' "distinct" <* space1 <* string' "from"
+      , pure IsNot
       ]
 
     binaryNot :: Parser (Expression -> Expression -> Expression)
@@ -316,3 +329,35 @@ precedence9 = do
       , NotLike <$ string' "like" <* space
       ]
 
+
+-- PRECEDENCE 10
+-- NOT [expr]
+
+
+precedence10 :: Parser Expression
+precedence10 = do
+  nots <- many (string' "not" <* space1)
+  expr <- precedence9
+  return $ foldl (\expr _ -> Not expr) expr nots
+
+
+-- PRECEDENCE 11
+-- [expr] AND [expr]
+
+
+precedence11 :: Parser Expression
+precedence11 = do
+  left <- precedence10
+  pairs <- many ((,) <$> string' "and" <* space1 <*> precedence10)
+  return $ foldl (\left (_, right) -> And left right) left pairs
+
+
+-- PRECEDENCE 12
+-- [expr] OR [expr]
+
+
+precedence12 :: Parser Expression
+precedence12 = do
+  left <- precedence11
+  pairs <- many ((,) <$> string' "or" <* space1 <*> precedence11)
+  return $ foldl (\left (_, right) -> Or left right) left pairs

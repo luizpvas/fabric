@@ -68,6 +68,9 @@ spec = do
     it "parses minus operator" $ do
       assertParseSuccess expression "-0.1" $ Minus (LiteralFloat 0.1)
 
+    it "parses not operator" $ do
+      assertParseSuccess expression "NOT TRUE" $ Not LiteralTrue
+
   describe "unary postfix" $ do
     it "parses COLLATE operator" $ do
       assertParseSuccess expression "'hello' COLLATE NOCASE" $
