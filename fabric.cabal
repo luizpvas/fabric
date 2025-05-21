@@ -30,7 +30,6 @@ library
       Compiler.Parser.Number
       Compiler.Parser.SQL
       Compiler.Parser.SQL.AST
-      Compiler.Parser.SQL.Precedence
       Compiler.Parser.String
       Formatter.SQL
       Lib
@@ -72,7 +71,6 @@ test-suite fabric-test
       Compiler.Parser.Assertion
       Compiler.Parser.NameSpec
       Compiler.Parser.NumberSpec
-      Compiler.Parser.SQL.PrecedenceSpec
       Compiler.Parser.SQLSpec
       Compiler.Parser.StringSpec
       Paths_fabric
