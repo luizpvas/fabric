@@ -258,9 +258,9 @@ precedence8 = do
 
 
 data Precedence9
-  = NextUnary   (Expression -> Expression)
-  | NextBinary  (Expression -> Expression -> Expression) Expression
-  | NextLike    (Expression -> Expression -> EscapeClause -> Expression) Expression EscapeClause
+  = NextUnary (Expression -> Expression)
+  | NextBinary (Expression -> Expression -> Expression) Expression
+  | NextBinaryWithEscape (Expression -> Expression -> EscapeClause -> Expression) Expression EscapeClause
 
 
 precedence9 :: Parser Expression
@@ -274,14 +274,14 @@ precedence9 = do
       case next of
         NextUnary toExpr -> toExpr left
         NextBinary toExpr right -> toExpr left right
-        NextLike toExpr right escape -> toExpr left right escape
+        NextBinaryWithEscape toExpr right escape -> toExpr left right escape
 
     next :: Parser Precedence9
     next =
       choice
         [ NextUnary <$> unary
-        , NextLike <$> like <*> precedence8 <*> escape
-        , try (NextLike <$> notLike <*> precedence8 <*> escape)
+        , NextBinaryWithEscape <$> like <*> precedence8 <*> escape
+        , try (NextBinaryWithEscape <$> notLike <*> precedence8 <*> escape)
         , NextBinary <$> binary <*> precedence8
         ]
 
