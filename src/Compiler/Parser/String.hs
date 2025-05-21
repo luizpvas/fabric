@@ -4,12 +4,12 @@ module Compiler.Parser.String
   ) where
 
 
-import Data.Void (Void)
 import Text.Megaparsec
 import Text.Megaparsec.Char
+import qualified Compiler.Parser.Error as Error
 
 
-singleQuoted :: Parsec Void String String
+singleQuoted :: Parsec Error.Error String String
 singleQuoted =
   concat <$> between (char singleQuote) (char singleQuote) (many (try escaped <|> uninteresting))
   where
@@ -18,7 +18,7 @@ singleQuoted =
     singleQuote = '\''
 
 
-doubleQuoted :: Parsec Void String String
+doubleQuoted :: Parsec Error.Error String String
 doubleQuoted =
   concat <$> between (char doubleQuote) (char doubleQuote) (many (try escaped <|> uninteresting))
   where

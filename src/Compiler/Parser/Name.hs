@@ -1,15 +1,15 @@
 module Compiler.Parser.Name (variable) where
 
 
-import Data.Void
 import Text.Megaparsec
 import Text.Megaparsec.Char
+import qualified Compiler.Parser.Error as Error
 
 
-variable :: Parsec Void String String
+variable :: Parsec Error.Error String String
 variable = identifier
 
 
-identifier :: Parsec Void String String
+identifier :: Parsec Error.Error String String
 identifier =
   (:) <$> (letterChar <|> char '_') <*> many (letterChar <|> char '_' <|> digitChar)

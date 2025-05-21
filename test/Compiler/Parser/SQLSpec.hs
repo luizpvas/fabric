@@ -121,7 +121,7 @@ spec = do
         Modulus (LiteralInt 1) (LiteralInt 2)
 
     it "parses sum" $ do
-      assertParseSuccess expression "1 + 2" $
+      assertParseSuccess expression "1 +" $
         Sum (LiteralInt 1) (LiteralInt 2)
 
     it "parses subtraction" $ do

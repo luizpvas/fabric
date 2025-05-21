@@ -24,6 +24,8 @@
 
 ### Writing style
 
+* Compiler error messages should be written in the first person. For example
+  "I was expecting x but got y".
 * When writing function documentation, imagine you are continueing the sentence
   "when you call x, you...". For example, "when you call List.map, you apply a
   function to every item of a list." Thus, the documentation for `List.map` is

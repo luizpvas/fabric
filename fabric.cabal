@@ -26,6 +26,7 @@ source-repository head
 library
   exposed-modules:
       Compiler.Database.Relational.Column
+      Compiler.Parser.Error
       Compiler.Parser.Name
       Compiler.Parser.Number
       Compiler.Parser.SQL
@@ -33,6 +34,7 @@ library
       Compiler.Parser.String
       Formatter.SQL
       Lib
+      REPL.Eval
   other-modules:
       Paths_fabric
   autogen-modules:

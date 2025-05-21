@@ -1,10 +1,12 @@
 module Compiler.Parser.Number (Number(..), parser) where
 
 
-import Data.Function ((&))
-import Data.Void (Void)
 import Text.Megaparsec
 import Text.Megaparsec.Char
+import qualified Compiler.Parser.Error as Error
+
+
+type Parser = Parsec Error.Error String
 
 
 data Number
@@ -14,7 +16,7 @@ data Number
   deriving (Show, Eq)
 
 
-parser :: Parsec Void String Number
+parser :: Parser Number
 parser =
   label "number" $
     choice
@@ -23,26 +25,27 @@ parser =
       , toIntOrFloat <$> digits <*> (optional decimalDigits) <*> (optional exponentDigits)
       ]
 
-hexDigits :: Parsec Void String String
+
+hexDigits :: Parser String
 hexDigits =
   (:) <$> hexDigitChar <*> many underscoreSeparatedHexDigit
   where
     underscoreSeparatedHexDigit = choice [ id <$ char '_' <*> hexDigitChar, hexDigitChar ]
 
 
-digits :: Parsec Void String String
+digits :: Parser String
 digits =
   (:) <$> digitChar <*> many underscoreSeparatedDigit
   where
     underscoreSeparatedDigit = choice [ id <$ char '_' <*> digitChar, digitChar ]
 
 
-decimalDigits :: Parsec Void String String
+decimalDigits :: Parser String
 decimalDigits =
   id <$ char '.' <*> digits
 
 
-exponentDigits :: Parsec Void String String
+exponentDigits :: Parser String
 exponentDigits =
   id <$ char' 'e' <*> choice
     [ (:) <$> char '-' <*> digits

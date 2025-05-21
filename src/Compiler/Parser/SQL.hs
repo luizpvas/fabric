@@ -15,6 +15,7 @@ import Data.Void
 import Text.Megaparsec
 import Text.Megaparsec.Char
 import Compiler.Parser.SQL.AST
+import qualified Compiler.Parser.Error as Error
 import qualified Compiler.Parser.Name as Name
 import qualified Compiler.Parser.Number as Number
 import qualified Compiler.Parser.String as String
@@ -23,7 +24,7 @@ import qualified Compiler.Parser.String as String
 -- PARSER
 
 
-type Parser = Parsec Void String
+type Parser = Parsec Error.Error String
 
 
 expression :: Parser Expression
@@ -156,7 +157,7 @@ expression4 = do
 expression5 :: Parser Expression
 expression5 = do
   left <- expression4
-  pairs <- many ((,) <$> operator <*> expression4)
+  pairs <- many ((,) <$> operator <*> (expression4 <|> Error.binaryOperatorMissingRightExpression "+"))
   return $ foldl (\l (op, r) -> op l r) left pairs
   where
     operator :: Parser (Expression -> Expression -> Expression)
