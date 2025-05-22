@@ -74,22 +74,6 @@ spec = do
     it "parses double quoted column names qualified with table name qualified with schema" $ do
       assertParseSuccess expression "\"public\".\"users\".\"email\"" $ (SchemaTableColumnName "public" "users" "email")
 
-  describe "tableNameOrTableFunction" $ do
-    it "parses table names" $ do
-      assertParseSuccess tableNameOrTableFunction "email" (TableName "email")
-
-    it "parses table names qualified with schema name" $ do
-      assertParseSuccess tableNameOrTableFunction "public.email" (SchemaTableName "public" "email")
-
-    it "parses table functions without arguments" $ do
-      assertParseSuccess tableNameOrTableFunction "myUsers()" (TableFunction "myUsers" [])
-
-    it "parses table functions with arguments" $ do
-      assertParseSuccess tableNameOrTableFunction "myUsers(1, true)" (TableFunction "myUsers" [ LiteralInt 1, LiteralTrue ])
-
-    it "parses table functions qualified with schema name" $ do
-      assertParseSuccess tableNameOrTableFunction "public.myUsers(1, true)" (SchemaTableFunction "public" "myUsers" [ LiteralInt 1, LiteralTrue ])
-
   describe "unary prefix" $ do
     it "parses bitwise-not operator" $ do
       assertParseSuccess expression "~1" $ BitwiseNot (LiteralInt 1)
@@ -267,15 +251,15 @@ spec = do
 
     it "parses IN against a list of expressions" $ do
       assertParseSuccess expression "a IN (b, c, d)" $
-        In (ColumnName "a") (ExpressionList [ ColumnName "b", ColumnName "c", ColumnName "d" ])
+        In (ColumnName "a") (InRightExpressionList [ ColumnName "b", ColumnName "c", ColumnName "d" ])
 
     it "parses IN against a table names" $ do
       assertParseSuccess expression "a IN public.users" $
-        In (ColumnName "a") (SchemaTableName "public" "users")
+        In (ColumnName "a") (InRightTableEval (SchemaTableName "public" "users"))
 
     it "parses IN against table functions" $ do
       assertParseSuccess expression "a IN myUsers(true)" $
-        In (ColumnName "a") (TableFunction "myUsers" [LiteralTrue])
+        In (ColumnName "a") (InRightTableEval (TableFunction "myUsers" [LiteralTrue]))
 
     -- it "parses IN against a select statement"
 

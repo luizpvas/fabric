@@ -1,10 +1,14 @@
-module Compiler.Parser.SQL.AST (Expression(..), EscapeClause(..)) where
+module Compiler.Parser.SQL.AST 
+  ( Expression(..)
+  , EscapeClause(..)
+  , InRight(..)
+  , TableEval(..)
+  ) where
 
 
 data Expression
   -- CONTAINERS
   = Parenthesized Expression
-  | ExpressionList [Expression]
   -- LITERAL
   | LiteralInt Int
   | LiteralHex Int
@@ -21,11 +25,6 @@ data Expression
   | ColumnName String
   | TableColumnName String String
   | SchemaTableColumnName String String String
-  -- TABLE NAME
-  | TableName String
-  | SchemaTableName String String
-  | TableFunction String [Expression]
-  | SchemaTableFunction String String [Expression]
   -- UNARY PREFIX
   | BitwiseNot Expression
   | Plus Expression
@@ -68,11 +67,25 @@ data Expression
   | NotGlob Expression Expression
   | Like Expression Expression EscapeClause
   | NotLike Expression Expression EscapeClause
-  | In Expression Expression
-  | NotIn Expression Expression
+  | In Expression InRight
+  | NotIn Expression InRight
   -- TERNARY
   | Between Expression Expression Expression
   | NotBetween Expression Expression Expression
+  deriving (Show, Eq)
+
+
+data InRight
+  = InRightExpressionList [Expression]
+  | InRightTableEval TableEval
+  deriving (Show, Eq)
+
+
+data TableEval
+  = TableName String
+  | SchemaTableName String String
+  | TableFunction String [Expression]
+  | SchemaTableFunction String String [Expression]
   deriving (Show, Eq)
 
 

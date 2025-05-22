@@ -1,7 +1,7 @@
 module Compiler.Parser.SQL
   ( expression
   , expressionList
-  , tableNameOrTableFunction
+  , tableEval
   ) where
 
 
@@ -125,8 +125,8 @@ columnName = do
     name = String.doubleQuoted <|> Name.variable
 
 
-tableNameOrTableFunction :: Parser Expression
-tableNameOrTableFunction = do
+tableEval :: Parser TableEval
+tableEval = do
   name1 <- name
   name2 <- (P.optional . P.try) (id <$ C.char '.' <*> name)
   arguments <- (P.optional . P.try) (P.between (C.char '(') (C.char ')') expressionList)
@@ -244,7 +244,7 @@ data Expression8
   = NextUnary (Expression -> Expression)
   | NextBinary (Expression -> Expression -> Expression) Expression
   | NextBinaryWithEscape (Expression -> Expression -> EscapeClause -> Expression) Expression EscapeClause
-  | NextIn (Expression -> Expression -> Expression) Expression
+  | NextIn (Expression -> InRight -> Expression) InRight
   | NextTernary (Expression -> Expression -> Expression -> Expression) Expression Expression
 
 
@@ -271,7 +271,7 @@ expression8 = do
         , P.try (NextBinaryWithEscape <$> notLike <*> expression7 <*> escape)
         , NextTernary <$> between <*> expression7 <* C.string' "and" <* C.space1 <*> expression7
         , P.try (NextTernary <$> notBetween <*> expression7 <* C.string' "and" <* C.space1 <*> expression7)
-        , NextIn <$> inOperator <*> inExpression
+        , NextIn <$> inOperator <*> inRight
         , NextBinary <$> binary <*> expression7
         ]
 
@@ -304,14 +304,14 @@ expression8 = do
     notBetween :: Parser (Expression -> Expression -> Expression -> Expression)
     notBetween = NotBetween <$ C.string' "not" <* C.space1 <* C.string' "between" <* C.space1
 
-    inOperator :: Parser (Expression -> Expression -> Expression)
+    inOperator :: Parser (Expression -> InRight -> Expression)
     inOperator = In <$ C.string' "in" <* C.space1
 
-    inExpression :: Parser Expression
-    inExpression =
+    inRight :: Parser InRight
+    inRight =
       P.choice
-        [ ExpressionList <$> P.between (C.char '(') (C.char ')') expressionList
-        , tableNameOrTableFunction
+        [ InRightExpressionList <$> P.between (C.char '(') (C.char ')') expressionList
+        , InRightTableEval <$> tableEval
         ]
 
     binary :: Parser (Expression -> Expression -> Expression)
