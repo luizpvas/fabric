@@ -311,6 +311,7 @@ expression8 = do
     inExpression =
       P.choice
         [ ExpressionList <$> P.between (C.char '(') (C.char ')') expressionList
+        , tableNameOrTableFunction
         ]
 
     binary :: Parser (Expression -> Expression -> Expression)

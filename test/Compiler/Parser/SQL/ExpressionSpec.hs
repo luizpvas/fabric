@@ -269,10 +269,15 @@ spec = do
       assertParseSuccess expression "a IN (b, c, d)" $
         In (ColumnName "a") (ExpressionList [ ColumnName "b", ColumnName "c", ColumnName "d" ])
 
+    it "parses IN against a table names" $ do
+      assertParseSuccess expression "a IN public.users" $
+        In (ColumnName "a") (SchemaTableName "public" "users")
+
+    it "parses IN against table functions" $ do
+      assertParseSuccess expression "a IN myUsers(true)" $
+        In (ColumnName "a") (TableFunction "myUsers" [LiteralTrue])
+
     -- it "parses IN against a select statement"
-    -- it "parses IN against a qualified table name"
-    -- it "parses IN against a table"
-    -- it "parses IN against a table function"
 
   describe "ternary" $ do
     it "parses BETWEEN" $ do
