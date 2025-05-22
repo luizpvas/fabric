@@ -249,6 +249,15 @@ spec = do
       assertParseSuccess expression "'x' NOT LIKE 'y' ESCAPE 'z'" $
         NotLike (LiteralString "x") (LiteralString "y") (Escape (LiteralString "z"))
 
+    it "parses IN against a list of expressions" $ do
+      assertParseSuccess expression "a IN (b, c, d)" $
+        In (ColumnName "a") (ExpressionList [ ColumnName "b", ColumnName "c", ColumnName "d" ])
+
+    -- it "parses IN against a select statement"
+    -- it "parses IN against a qualified table name"
+    -- it "parses IN against a table"
+    -- it "parses IN against a table function"
+
   describe "ternary" $ do
     it "parses BETWEEN" $ do
       assertParseSuccess expression "2 BETWEEN 1 AND 3" $

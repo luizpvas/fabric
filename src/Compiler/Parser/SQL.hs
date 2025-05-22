@@ -13,9 +13,10 @@ module Compiler.Parser.SQL
 
 
 import Data.Void
-import Text.Megaparsec
-import Text.Megaparsec.Char
 import Compiler.Parser.SQL.AST
+import Control.Applicative ((<|>))
+import qualified Text.Megaparsec as P
+import qualified Text.Megaparsec.Char as C
 import qualified Compiler.Parser.Error as Error
 import qualified Compiler.Parser.Name as Name
 import qualified Compiler.Parser.Number as Number
@@ -25,7 +26,7 @@ import qualified Compiler.Parser.String as String
 -- PARSER
 
 
-type Parser = Parsec Error.Error String
+type Parser = P.Parsec Error.Error String
 
 
 -- EXPRESSION LIST
@@ -34,7 +35,7 @@ type Parser = Parsec Error.Error String
 expressionList :: Parser Expression
 expressionList = do
   first  <- expression
-  others <- many (id <$ char ',' <* space <*> expression)
+  others <- P.many (id <$ C.char ',' <* C.space <*> expression)
   return $ (ExpressionList (first : others))
 
 
@@ -47,7 +48,7 @@ expression = expression11
 
 expression0 :: Parser Expression
 expression0 =
-  choice
+  P.choice
     [ literalNumber
     , literalString
     , literalBlob
@@ -56,7 +57,7 @@ expression0 =
     , literalFalse
     , literalCurrent
     , columnName
-    , fmap Parenthesized (between (char '(') (char ')') expression)
+    , fmap Parenthesized (P.between (C.char '(') (C.char ')') expression)
     ]
 
 
@@ -76,41 +77,41 @@ literalString =
 
 literalBlob :: Parser Expression
 literalBlob =
-  LiteralBlob <$ char' 'x' <* char '\'' <*> many hexDigitChar <* char '\''
+  LiteralBlob <$ C.char' 'x' <* C.char '\'' <*> P.many C.hexDigitChar <* C.char '\''
 
 
 literalNull :: Parser Expression
 literalNull =
-  LiteralNull <$ string' "null"
+  LiteralNull <$ C.string' "null"
 
 
 literalTrue :: Parser Expression
 literalTrue =
-  LiteralTrue <$ string' "true"
+  LiteralTrue <$ C.string' "true"
 
 
 literalFalse :: Parser Expression
 literalFalse =
-  LiteralFalse <$ string' "false"
+  LiteralFalse <$ C.string' "false"
 
 
 literalCurrent :: Parser Expression
 literalCurrent =
-  string' "current_" *> trailing
+  C.string' "current_" *> trailing
   where
     trailing :: Parser Expression
-    trailing = choice
-      [ LiteralCurrentDate      <$ string' "date"
-      , LiteralCurrentTimestamp <$ string' "timestamp"
-      , LiteralCurrentTime      <$ string' "time"
+    trailing = P.choice
+      [ LiteralCurrentDate      <$ C.string' "date"
+      , LiteralCurrentTimestamp <$ C.string' "timestamp"
+      , LiteralCurrentTime      <$ C.string' "time"
       ]
 
 
 columnName :: Parser Expression
 columnName = do
   name1 <- name
-  name2 <- (optional . try) (id <$ char' '.' <*> name)
-  name3 <- (optional . try) (id <$ char' '.' <*> name)
+  name2 <- (P.optional . P.try) (id <$ C.char' '.' <*> name)
+  name3 <- (P.optional . P.try) (id <$ C.char' '.' <*> name)
   return $
     case (name2, name3) of
       ((Just n2), (Just n3)) -> SchemaTableColumnName name1 n2 n3
@@ -123,11 +124,11 @@ columnName = do
 
 expression1 :: Parser Expression
 expression1 =
-  choice
-    [ BitwiseNot <$ char '~' <*> expression1 <* space
-    , Plus       <$ char '+' <*> expression1 <* space
-    , Minus      <$ char '-' <*> expression1 <* space
-    , expression0 <* space
+  P.choice
+    [ BitwiseNot <$ C.char '~' <*> expression1 <* C.space
+    , Plus <$ C.char '+' <*> expression1 <* C.space
+    , Minus <$ C.char '-' <*> expression1 <* C.space
+    , expression0 <* C.space
     ]
 
 
@@ -137,34 +138,34 @@ expression2 = do
   where
     collate :: Parser (Expression -> Expression)
     collate =
-      Collate <$ string' "collate" <* space1 <*> Name.variable <* space
+      Collate <$ C.string' "collate" <* C.space1 <*> Name.variable <* C.space
 
 
 expression3 :: Parser Expression
 expression3 = do
   left  <- expression2
-  pairs <- many ((,) <$> operator <*> expression2)
+  pairs <- P.many ((,) <$> operator <*> expression2)
   return $ foldl (\l (op, r) -> op l r) left pairs
   where
     operator :: Parser (Expression -> Expression -> Expression)
-    operator = choice
-      [ StringConcatenation    <$ string "||"  <* space
-      , JsonExtractDoubleArrow <$ string "->>" <* space
-      , JsonExtractSingleArrow <$ string "->"  <* space
+    operator = P.choice
+      [ StringConcatenation    <$ C.string "||"  <* C.space
+      , JsonExtractDoubleArrow <$ C.string "->>" <* C.space
+      , JsonExtractSingleArrow <$ C.string "->"  <* C.space
       ]
 
 
 expression4 :: Parser Expression
 expression4 = do
   left <- expression3
-  pairs <- many ((,) <$> operator <*> expression3)
+  pairs <- P.many ((,) <$> operator <*> expression3)
   return $ foldl (\l (op, r) -> op l r) left pairs
   where
     operator :: Parser (Expression -> Expression -> Expression)
-    operator = choice
-      [ Multiplication <$ string "*" <* space
-      , Division       <$ string "/" <* space
-      , Modulus        <$ string "%" <* space
+    operator = P.choice
+      [ Multiplication <$ C.string "*" <* C.space
+      , Division       <$ C.string "/" <* C.space
+      , Modulus        <$ C.string "%" <* C.space
       ]
 
 
@@ -176,7 +177,7 @@ data Expression5
 expression5 :: Parser Expression
 expression5 = do
   left <- expression4
-  nexts <- many next
+  nexts <- P.many next
   return $ foldl solve left nexts
   where
     solve :: Expression -> Expression5 -> Expression
@@ -184,39 +185,39 @@ expression5 = do
     solve left (NextSubtraction right) = Subtraction left right
 
     next :: Parser Expression5
-    next = choice
-      [ NextSum         <$ string "+" <* space <*> (expression4 <|> Error.sumMissingRightExpression)
-      , NextSubtraction <$ string "-" <* space <*> (expression4 <|> Error.subtractionMissingRightExpression)
+    next = P.choice
+      [ NextSum         <$ C.string "+" <* C.space <*> (expression4 <|> Error.sumMissingRightExpression)
+      , NextSubtraction <$ C.string "-" <* C.space <*> (expression4 <|> Error.subtractionMissingRightExpression)
       ]
 
 
 expression6 :: Parser Expression
 expression6 = do
   left <- expression5
-  pairs <- many ((,) <$> operator <*> expression5)
+  pairs <- P.many ((,) <$> operator <*> expression5)
   return $ foldl (\l (op, r) -> op l r) left pairs
   where
     operator :: Parser (Expression -> Expression -> Expression)
-    operator = choice
-      [ BitwiseAnd        <$ string "&"  <* space
-      , BitwiseOr         <$ string "|"  <* space
-      , BitwiseShiftLeft  <$ string "<<" <* space
-      , BitwiseShiftRight <$ string ">>" <* space
+    operator = P.choice
+      [ BitwiseAnd        <$ C.string "&"  <* C.space
+      , BitwiseOr         <$ C.string "|"  <* C.space
+      , BitwiseShiftLeft  <$ C.string "<<" <* C.space
+      , BitwiseShiftRight <$ C.string ">>" <* C.space
       ]
 
 
 expression7 :: Parser Expression
 expression7 = do
   left <- expression6
-  pairs <- many ((,) <$> operator <*> expression6)
+  pairs <- P.many ((,) <$> operator <*> expression6)
   return $ foldl (\l (op, r) -> op l r) left pairs
   where
     operator :: Parser (Expression -> Expression -> Expression)
-    operator = choice
-      [ LessThanOrEqualTo <$ string "<=" <* space
-      , GreaterThanOrEqualTo <$ string ">=" <* space
-      , try (LessThan <$ string "<" <* notFollowedBy (char '>') <* space)
-      , GreaterThan <$ string ">" <* space
+    operator = P.choice
+      [ LessThanOrEqualTo <$ C.string "<=" <* C.space
+      , GreaterThanOrEqualTo <$ C.string ">=" <* C.space
+      , P.try (LessThan <$ C.string "<" <* P.notFollowedBy (C.char '>') <* C.space)
+      , GreaterThan <$ C.string ">" <* C.space
       ]
 
 
@@ -224,13 +225,14 @@ data Expression8
   = NextUnary (Expression -> Expression)
   | NextBinary (Expression -> Expression -> Expression) Expression
   | NextBinaryWithEscape (Expression -> Expression -> EscapeClause -> Expression) Expression EscapeClause
+  | NextIn (Expression -> Expression -> Expression) Expression
   | NextTernary (Expression -> Expression -> Expression -> Expression) Expression Expression
 
 
 expression8 :: Parser Expression
 expression8 = do
   left <- expression7
-  nexts <- many next
+  nexts <- P.many next
   return $ foldl eval left nexts
   where
     eval :: Expression -> Expression8 -> Expression
@@ -240,84 +242,95 @@ expression8 = do
         NextBinary toExpr right -> toExpr left right
         NextBinaryWithEscape toExpr right escape -> toExpr left right escape
         NextTernary toExpr middle right -> toExpr left middle right
+        NextIn toExpr right -> toExpr left right
 
     next :: Parser Expression8
     next =
-      choice
+      P.choice
         [ NextUnary <$> unary
         , NextBinaryWithEscape <$> like <*> expression7 <*> escape
-        , try (NextBinaryWithEscape <$> notLike <*> expression7 <*> escape)
-        , NextTernary <$> between <*> expression7 <* string' "and" <* space1 <*> expression7
-        , try (NextTernary <$> notBetween <*> expression7 <* string' "and" <* space1 <*> expression7)
+        , P.try (NextBinaryWithEscape <$> notLike <*> expression7 <*> escape)
+        , NextTernary <$> between <*> expression7 <* C.string' "and" <* C.space1 <*> expression7
+        , P.try (NextTernary <$> notBetween <*> expression7 <* C.string' "and" <* C.space1 <*> expression7)
+        , NextIn <$> inOperator <*> inExpression
         , NextBinary <$> binary <*> expression7
         ]
 
     unary :: Parser (Expression -> Expression)
     unary =
-      choice
-        [ IsNull <$ string' "isnull"
+      P.choice
+        [ IsNull <$ C.string' "isnull"
         -- NOTE: try is necessary because "[expr] NOT" might refer to unary
         -- postfix operators (NOTNULL or NOT NULL) but it could also be the
         -- start of a binary "[expr] NOT LIKE [expr]" or "[expr] NOT IN [expr]".
-        , try (NotNull <$ string' "not" <* space <* string' "null")
+        , P.try (NotNull <$ C.string' "not" <* C.space <* C.string' "null")
         ]
 
     like :: Parser (Expression -> Expression -> EscapeClause -> Expression)
-    like = Like <$ string' "like" <* space1
+    like = Like <$ C.string' "like" <* C.space1
 
     notLike :: Parser (Expression -> Expression -> EscapeClause -> Expression)
-    notLike = NotLike <$ string' "not" <* space1 <* string' "like" <* space1
+    notLike = NotLike <$ C.string' "not" <* C.space1 <* C.string' "like" <* C.space1
 
     escape :: Parser EscapeClause
     escape =
-      choice
-        [ Escape <$ string' "escape" <* space1 <*> expression7
+      P.choice
+        [ Escape <$ C.string' "escape" <* C.space1 <*> expression7
         , pure NoEscape
         ]
 
     between :: Parser (Expression -> Expression -> Expression -> Expression)
-    between = Between <$ string' "between" <* space1
+    between = Between <$ C.string' "between" <* C.space1
 
     notBetween :: Parser (Expression -> Expression -> Expression -> Expression)
-    notBetween = NotBetween <$ string' "not" <* space1 <* string' "between" <* space1
+    notBetween = NotBetween <$ C.string' "not" <* C.space1 <* C.string' "between" <* C.space1
+
+    inOperator :: Parser (Expression -> Expression -> Expression)
+    inOperator = In <$ C.string' "in" <* C.space1
+
+    inExpression :: Parser Expression
+    inExpression =
+      P.choice
+        [ P.between (C.char '(') (C.char ')') expressionList
+        ]
 
     binary :: Parser (Expression -> Expression -> Expression)
-    binary = choice
-      [ Equals <$ string "==" <* space
-      , Equals <$ string "=" <* space
-      , NotEquals <$ string "<>" <* space
-      , NotEquals <$ string "!=" <* space
-      , Glob <$ string' "glob" <* space
-      , Regexp <$ string' "regexp" <* space
-      , Match <$ string' "match" <* space
-      , string' "is" *> space1 *> binaryIs
-      , string' "not" *> space1 *> binaryNot
+    binary = P.choice
+      [ Equals <$ C.string "==" <* C.space
+      , Equals <$ C.string "=" <* C.space
+      , NotEquals <$ C.string "<>" <* C.space
+      , NotEquals <$ C.string "!=" <* C.space
+      , Glob <$ C.string' "glob" <* C.space
+      , Regexp <$ C.string' "regexp" <* C.space
+      , Match <$ C.string' "match" <* C.space
+      , C.string' "is" *> C.space1 *> binaryIs
+      , C.string' "not" *> C.space1 *> binaryNot
       ]
 
     binaryIs :: Parser (Expression -> Expression -> Expression)
-    binaryIs = choice
-      [ string' "not" *> space1 *> binaryIsNot
-      , IsDistinctFrom <$ string' "distinct" <* space1 <* string' "from" <* space1
+    binaryIs = P.choice
+      [ C.string' "not" *> C.space1 *> binaryIsNot
+      , IsDistinctFrom <$ C.string' "distinct" <* C.space1 <* C.string' "from" <* C.space1
       , pure Is
       ]
 
     binaryIsNot :: Parser (Expression -> Expression -> Expression)
-    binaryIsNot = choice
-      [ IsNotDistinctFrom <$ string' "distinct" <* space1 <* string' "from" <* space1
+    binaryIsNot = P.choice
+      [ IsNotDistinctFrom <$ C.string' "distinct" <* C.space1 <* C.string' "from" <* C.space1
       , pure IsNot
       ]
 
     binaryNot :: Parser (Expression -> Expression -> Expression)
-    binaryNot = choice
-      [ NotGlob <$ string' "glob" <* space
-      , NotRegexp <$ string' "regexp" <* space
-      , NotMatch <$ string' "match" <* space
+    binaryNot = P.choice
+      [ NotGlob <$ C.string' "glob" <* C.space
+      , NotRegexp <$ C.string' "regexp" <* C.space
+      , NotMatch <$ C.string' "match" <* C.space
       ]
 
 
 expression9 :: Parser Expression
 expression9 = do
-  nots <- many (string' "not" <* space1)
+  nots <- P.many (C.string' "not" <* C.space1)
   expr <- expression8
   return $ foldl (\expr _ -> Not expr) expr nots
 
@@ -325,12 +338,12 @@ expression9 = do
 expression10 :: Parser Expression
 expression10 = do
   left <- expression9
-  pairs <- many ((,) <$> string' "and" <* space1 <*> expression9)
+  pairs <- P.many ((,) <$> C.string' "and" <* C.space1 <*> expression9)
   return $ foldl (\left (_, right) -> And left right) left pairs
 
 
 expression11 :: Parser Expression
 expression11 = do
   left <- expression10
-  pairs <- many ((,) <$> string' "or" <* space1 <*> expression10)
+  pairs <- P.many ((,) <$> C.string' "or" <* C.space1 <*> expression10)
   return $ foldl (\left (_, right) -> Or left right) left pairs
