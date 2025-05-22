@@ -74,7 +74,7 @@ spec = do
     it "parses double quoted column names qualified with table name qualified with schema" $ do
       assertParseSuccess expression "\"public\".\"users\".\"email\"" $ (SchemaTableColumnName "public" "users" "email")
 
-  describe "table names" $ do
+  describe "tableNameOrTableFunction" $ do
     it "parses table names" $ do
       assertParseSuccess tableNameOrTableFunction "email" (TableName "email")
 
