@@ -168,16 +168,25 @@ expression4 = do
       ]
 
 
+data Expression5
+  = NextSum Expression
+  | NextSubtraction Expression
+
+
 expression5 :: Parser Expression
 expression5 = do
   left <- expression4
-  pairs <- many ((,) <$> operator <*> (expression4 <|> Error.binaryOperatorMissingRightExpression "+"))
-  return $ foldl (\l (op, r) -> op l r) left pairs
+  nexts <- many next
+  return $ foldl solve left nexts
   where
-    operator :: Parser (Expression -> Expression -> Expression)
-    operator = choice
-      [ Sum         <$ string "+" <* space
-      , Subtraction <$ string "-" <* space
+    solve :: Expression -> Expression5 -> Expression
+    solve left (NextSum right) = Sum left right
+    solve left (NextSubtraction right) = Subtraction left right
+
+    next :: Parser Expression5
+    next = choice
+      [ NextSum         <$ string "+" <* space <*> (expression4 <|> Error.sumMissingRightExpression)
+      , NextSubtraction <$ string "-" <* space <*> (expression4 <|> Error.subtractionMissingRightExpression)
       ]
 
 
