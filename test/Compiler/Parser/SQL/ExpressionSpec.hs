@@ -74,6 +74,22 @@ spec = do
     it "parses double quoted column names qualified with table name qualified with schema" $ do
       assertParseSuccess expression "\"public\".\"users\".\"email\"" $ (SchemaTableColumnName "public" "users" "email")
 
+  describe "table names" $ do
+    it "parses table names" $ do
+      assertParseSuccess tableNameOrTableFunction "email" (TableName "email")
+
+    it "parses table names qualified with schema name" $ do
+      assertParseSuccess tableNameOrTableFunction "public.email" (SchemaTableName "public" "email")
+
+    it "parses table functions without arguments" $ do
+      assertParseSuccess tableNameOrTableFunction "myUsers()" (TableFunction "myUsers" [])
+
+    it "parses table functions with arguments" $ do
+      assertParseSuccess tableNameOrTableFunction "myUsers(1, true)" (TableFunction "myUsers" [ LiteralInt 1, LiteralTrue ])
+
+    it "parses table functions qualified with schema name" $ do
+      assertParseSuccess tableNameOrTableFunction "public.myUsers(1, true)" (SchemaTableFunction "public" "myUsers" [ LiteralInt 1, LiteralTrue ])
+
   describe "unary prefix" $ do
     it "parses bitwise-not operator" $ do
       assertParseSuccess expression "~1" $ BitwiseNot (LiteralInt 1)
@@ -304,8 +320,7 @@ spec = do
   describe "expression list" $ do
     it "parses expressions separated by comma" $ do
       assertParseSuccess expressionList "1, 2+2, 'x' ISNULL" $
-        ExpressionList
-          [ LiteralInt 1
-          , Sum (LiteralInt 2) (LiteralInt 2)
-          , IsNull (LiteralString "x")
-          ]
+        [ LiteralInt 1
+        , Sum (LiteralInt 2) (LiteralInt 2)
+        , IsNull (LiteralString "x")
+        ]

@@ -21,6 +21,11 @@ data Expression
   | ColumnName String
   | TableColumnName String String
   | SchemaTableColumnName String String String
+  -- TABLE NAME
+  | TableName String
+  | SchemaTableName String String
+  | TableFunction String [Expression]
+  | SchemaTableFunction String String [Expression]
   -- UNARY PREFIX
   | BitwiseNot Expression
   | Plus Expression
