@@ -34,7 +34,7 @@ library
       Compiler.Parser.String
       Formatter.SQL
       Lib
-      REPL.Eval
+      REPL
   other-modules:
       Paths_fabric
   autogen-modules:

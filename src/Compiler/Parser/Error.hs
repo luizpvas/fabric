@@ -14,7 +14,8 @@ data Error
 
 instance ShowErrorComponent Error where
   showErrorComponent (BinaryOperatorMissingRightExpression operator) =
-    "binary operator " ++ operator ++ " needs a right expression"
+    "I just saw a plus sign, so I was expecting to see an expression next.\n" ++
+    "Something like 42 or 1000 that makes sense with a + sign."
 
 
 binaryOperatorMissingRightExpression :: String -> Parsec Error String a
