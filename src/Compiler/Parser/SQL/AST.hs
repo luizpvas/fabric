@@ -6,6 +6,31 @@ module Compiler.Parser.SQL.AST
   ) where
 
 
+-- SELECT
+
+
+data Select = Select
+  { resultColumnList :: ResultColumnList
+  }
+
+
+data ResultColumnList
+  = ResultColumnListDistinct [SelectResultColumn]
+  | ResultColumnListAll [SelectResultColumn]
+
+
+data SelectResultColumn
+  = SelectResultColumnExpression Expression
+  | SelectResultColumnAliasExpression Expression String
+  | SelectResultColumnStar
+  | SelectResultColumnTableStar String
+  | SelectResultColumnSchemaTableStar String String
+  deriving (Show, Eq)
+
+
+-- EXPRESSION
+
+
 data Expression
   -- CONTAINERS
   = Parenthesized Expression

@@ -16,12 +16,12 @@ data Error
 
 instance ShowErrorComponent Error where
   showErrorComponent (SumMissingRightExpression) =
-    "I just saw a plus sign, so I was expecting to see an expression next.\n" ++
-    "Something like 42 or 1000 that makes sense with a + sign."
+    "I just saw a + sign, so I was expecting to see an expression next.\n" ++
+    "You're probably missing a number there!"
 
   showErrorComponent (SubtractionMissingRightExpression) =
-    "I just saw a minus sign, so I was expecting to see an expressio next.\n" ++
-    "Something like 42 or 100 that makes sense with a - sign."
+    "I just saw a - sign, so I was expecting to see an expression next.\n" ++
+    "You're probably missing a number there!"
 
 
 sumMissingRightExpression :: Parsec Error String a
