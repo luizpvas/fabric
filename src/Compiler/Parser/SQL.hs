@@ -30,6 +30,25 @@ import qualified Compiler.Parser.String as String
 type Parser = P.Parsec Error.Error String
 
 
+-- TABLE EVAL
+
+
+tableEval :: Parser TableEval
+tableEval = do
+  name1 <- name
+  name2 <- (P.optional . P.try) (id <$ C.char '.' <*> name)
+  arguments <- (P.optional . P.try) (P.between (C.char '(') (C.char ')') expressionList)
+  return $
+    case (name2, arguments) of
+      ((Just n2), (Just args)) -> SchemaTableFunction name1 n2 args
+      ((Just n2), Nothing)     -> SchemaTableName name1 n2
+      (Nothing, (Just args))   -> TableFunction name1 args
+      (Nothing, Nothing)       -> TableName name1
+  where
+    name :: Parser String
+    name = String.doubleQuoted <|> Name.variable
+
+
 -- EXPRESSION LIST
 
 
@@ -120,22 +139,6 @@ columnName = do
       ((Just n2), (Just n3)) -> SchemaTableColumnName name1 n2 n3
       ((Just n2), _)         -> TableColumnName name1 n2
       (_, _)                 -> ColumnName name1
-  where
-    name :: Parser String
-    name = String.doubleQuoted <|> Name.variable
-
-
-tableEval :: Parser TableEval
-tableEval = do
-  name1 <- name
-  name2 <- (P.optional . P.try) (id <$ C.char '.' <*> name)
-  arguments <- (P.optional . P.try) (P.between (C.char '(') (C.char ')') expressionList)
-  return $
-    case (name2, arguments) of
-      ((Just n2), (Just args)) -> SchemaTableFunction name1 n2 args
-      ((Just n2), Nothing)     -> SchemaTableName name1 n2
-      (Nothing, (Just args))   -> TableFunction name1 args
-      (Nothing, Nothing)       -> TableName name1
   where
     name :: Parser String
     name = String.doubleQuoted <|> Name.variable
